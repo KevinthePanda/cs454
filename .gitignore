@@ -1,0 +1,6 @@
+*~
+*.swp
+*.d
+*.o
+stringClient
+stringServer
