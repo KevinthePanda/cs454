@@ -13,8 +13,7 @@ using namespace std;
 //#include "stringServer.h"
 
 // get sockaddr, IPv4 or IPv6:
-void *get_in_addr(struct sockaddr *sa)
-{
+void *get_in_addr(struct sockaddr *sa) {
   if (sa->sa_family == AF_INET) {
     return &(((struct sockaddr_in*)sa)->sin_addr);
   }
@@ -99,8 +98,3 @@ int main() {
 
   return 0;
 }
-
-
-//int main() {
-  //cout << titleCase("test SDFLK kljsdfSDfjs $a") << endl;
-//}
