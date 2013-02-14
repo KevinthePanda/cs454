@@ -12,7 +12,7 @@
 #include <pthread.h>
 using namespace std;
 
-struct thread_data{
+struct thread_data {
   int sock;
   vector<string> *buf;
 };
@@ -74,8 +74,6 @@ int main() {
   serv_addr.sin_port = htons(portno);
 
   connect(sockfd,(struct sockaddr *)&serv_addr, sizeof(serv_addr));
-
-  printf("SUCCESS !!! Connection established \n");
 
   struct thread_data td;
   td.sock = sockfd;
