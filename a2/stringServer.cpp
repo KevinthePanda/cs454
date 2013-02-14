@@ -44,7 +44,6 @@ void StringServer::start() {
   struct addrinfo hints;
   struct addrinfo* servinfo;
   struct addrinfo* p;
-  char ipstr[INET6_ADDRSTRLEN];
 
   memset(&hints, 0, sizeof hints);
   hints.ai_family = AF_UNSPEC;
