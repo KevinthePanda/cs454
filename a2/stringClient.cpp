@@ -29,7 +29,7 @@ void *SendToServer(void *threadarg) {
       (*dataQueue).erase((*dataQueue).begin());
 
       // send data to server
-      int len = data.length();
+      int len = data.length() + 1;
       send(my_data->sock, &len, sizeof(len), 0);
       send(my_data->sock, data.c_str(), len, 0);
 

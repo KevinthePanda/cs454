@@ -94,7 +94,6 @@ void StringServer::start() {
     n = n+1;
 
     status = select(n, &readfds, NULL, NULL, NULL);
-    cerr << "after select" << endl;
 
     if (status == -1) {
       cerr << "ERROR: select failed." << endl;
@@ -102,27 +101,21 @@ void StringServer::start() {
       // one or both of the descriptors have data
       if (FD_ISSET(sock, &readfds)) {
         // ready to accept
-        cerr << "ready to accept" << endl;
         socklen_t addr_size = sizeof their_addr;
         int new_sock = accept(sock, (struct sockaddr*)&their_addr, &addr_size);
 
         if (new_sock < 0) {
           cerr << "ERROR: while accepting connection" << endl;
+          close(new_sock);
           continue;
         }
 
-        // print who connected
-        inet_ntop(their_addr.ss_family,
-            get_in_addr((struct sockaddr *)&their_addr),
-            ipstr, sizeof ipstr);
-        printf("server: got connection from %s\n", ipstr);
-
         // add new connection
         add_connection(new_sock);
+        cout << "num connections: " << myConnections.size() << endl;
 
       } else {
         // a connection is ready to send us stuff
-        cerr << "num connections: " << myConnections.size() << endl;
         for (vector<int>::iterator it = myConnections.begin();
             it != myConnections.end(); ++it) {
           int connection = *it;
@@ -178,16 +171,16 @@ void StringServer::process_connection(int sock) {
     cerr << "ERROR: receive failed" << endl;
     return;
   }
-  cout << "server: message - " << msg;
+  cout << "server: message - " << msg << endl;
 
   // title case the string
   string str(msg);
   string result = title_case(str);
-  cout << "server: result - " << result;
+  cout << "server: result - " << result << endl;
 
   // send the buffer length
   const char* to_send = result.c_str();
-  msg_len = strlen(to_send);
+  msg_len = strlen(to_send) + 1;
   status = send(sock, &msg_len, sizeof msg_len, 0);
   if (status < 0) {
     cerr << "ERROR: send failed" << endl;
