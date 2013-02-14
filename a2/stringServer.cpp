@@ -12,9 +12,6 @@ using namespace std;
 
 //#include "stringServer.h"
 
-//StringServer::StringServer() {
-//}
-
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
 {
@@ -47,7 +44,7 @@ int main() {
   int sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
 
   status = bind(sock, servinfo->ai_addr, servinfo->ai_addrlen);
-  
+
   status = listen(sock, 5);
 
   cout << "String Server: waiting for connections.." << endl;
@@ -68,29 +65,8 @@ int main() {
     printf("server: got connection from %s\n", ipstr);
   }
 
-
-  //for(p = servinfo;p != NULL; p = p->ai_next) {
-    //void *addr;
-    //char *ipver;
-
-    //// get the pointer to the address itself,
-    //// different fields in IPv4 and IPv6:
-    //if (p->ai_family == AF_INET) { // IPv4
-      //struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
-      //addr = &(ipv4->sin_addr);
-      //ipver = "IPv4";
-    //} else { // IPv6
-      //struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
-      //addr = &(ipv6->sin6_addr);
-      //ipver = "IPv6";
-    //}
-
-    //// convert the IP to a string and print it:
-    //inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
-    //printf("  %s: %s\n", ipver, ipstr);
-  //}
-
-  freeaddrinfo(servinfo); // free the linked list
+  // free the linked list
+  freeaddrinfo(servinfo);
 
   return 0;
 }
@@ -105,7 +81,3 @@ string titleCase(string str) {
   }
   return str;
 }
-
-//int main() {
-  //cout << titleCase("test SDFLK kljsdfSDfjs $a") << endl;
-//}
