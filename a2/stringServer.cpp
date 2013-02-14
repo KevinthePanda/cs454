@@ -25,6 +25,17 @@ void *get_in_addr(struct sockaddr *sa)
   return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+string titleCase(string str) {
+  for (unsigned int i = 0; i < str.length(); i++) {
+    if (i == 0 || str[i-1] == ' ') {
+      str[i] = toupper(str[i]);
+    } else {
+      str[i] = tolower(str[i]);
+    }
+  }
+  return str;
+}
+
 int main() {
   int status;
   struct addrinfo hints;
@@ -50,7 +61,7 @@ int main() {
   
   status = listen(sock, 5);
 
-  cout << "String Server: waiting for connections.." << endl;
+  cout << "server: waiting for connections.." << endl;
 
   struct sockaddr_storage their_addr;
   while (true) {
@@ -58,7 +69,7 @@ int main() {
     int new_sock = accept(sock, (struct sockaddr*)&their_addr, &addr_size);
 
     if (new_sock < 0) {
-      cerr << "String Server: error while accepting connection" << endl;
+      cerr << "ERROR: while accepting connection" << endl;
       continue;
     }
 
@@ -66,6 +77,24 @@ int main() {
         get_in_addr((struct sockaddr *)&their_addr),
         ipstr, sizeof ipstr);
     printf("server: got connection from %s\n", ipstr);
+
+    //int msg_len = 0;
+    //status = recv(new_sock, &msg_len, sizeof msg_len, 0);
+    //cout << "server: message length " << msg_len << endl;
+
+    char* msg = new char[256];
+    status = recv(new_sock, msg, 256, 0);
+    cout << "server: message " << msg << endl;
+
+    string str(msg);
+    string result = titleCase(str);
+
+    cout << "server: result " << result << endl;
+
+    const char* to_send = result.c_str();
+    int msg_len = strlen(to_send);
+    status = send(new_sock, to_send, msg_len, 0);
+
   }
 
 
@@ -95,16 +124,6 @@ int main() {
   return 0;
 }
 
-string titleCase(string str) {
-  for (unsigned int i = 0; i < str.length(); i++) {
-    if (i == 0 || str[i-1] == ' ') {
-      str[i] = toupper(str[i]);
-    } else {
-      str[i] = tolower(str[i]);
-    }
-  }
-  return str;
-}
 
 //int main() {
   //cout << titleCase("test SDFLK kljsdfSDfjs $a") << endl;
