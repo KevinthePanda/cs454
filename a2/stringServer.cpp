@@ -112,7 +112,6 @@ void StringServer::start() {
 
         // add new connection
         add_connection(new_sock);
-        cout << "num connections: " << myConnections.size() << endl;
 
       } else {
         // a connection is ready to send us stuff
@@ -158,11 +157,9 @@ void StringServer::process_connection(int sock) {
   }
   if (status == 0) {
     // client has closed the connection
-    cout << "server: client " << sock << " closed connection" << endl;
     myToRemove.push_back(sock);
     return;
   }
-  cout << "server: message length - " << msg_len << endl;
 
   // receive the string
   char* msg = new char[msg_len];
@@ -171,12 +168,10 @@ void StringServer::process_connection(int sock) {
     cerr << "ERROR: receive failed" << endl;
     return;
   }
-  cout << "server: message - " << msg << endl;
 
   // title case the string
   string str(msg);
   string result = title_case(str);
-  cout << "server: result - " << result << endl;
 
   // send the buffer length
   const char* to_send = result.c_str();
