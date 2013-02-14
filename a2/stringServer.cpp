@@ -30,7 +30,7 @@ StringServer::StringServer() {
 
 string StringServer::title_case(string str) {
   for (unsigned int i = 0; i < str.length(); i++) {
-    if (i == 0 || str[i-1] == ' ') {
+    if (i == 0 || str[i-1] == ' ' || str[i-1] == '\t') {
       str[i] = toupper(str[i]);
     } else {
       str[i] = tolower(str[i]);
