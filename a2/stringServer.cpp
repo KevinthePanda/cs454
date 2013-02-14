@@ -44,7 +44,7 @@ int main() {
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_flags = AI_PASSIVE;
 
-  status = getaddrinfo(NULL, "8888", &hints, &servinfo);
+  status = getaddrinfo(NULL, "0", &hints, &servinfo);
   if (status != 0) {
     fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
     return 1;
@@ -61,7 +61,11 @@ int main() {
   char hostname[256];
   gethostname(hostname, 256);
   cout << "SERVER ADDRESS " << hostname << endl;
-  cout << "SERVER_PORT " << "8888" << endl;
+
+  struct sockaddr_in sin;
+  socklen_t len = sizeof(sin);
+  getsockname(sock, (struct sockaddr *)&sin, &len);
+  cout << "SERVER_PORT " << ntohs(sin.sin_port) << endl;
 
   struct sockaddr_storage their_addr;
   while (true) {
