@@ -18,6 +18,7 @@ void *SendToServer(void *threadarg) {
 
       // send data to server
       // block on receive
+      // cout << "Server: " << blah << endl;
 
       sleep(2000);
     }
@@ -39,8 +40,5 @@ int main() {
   while (true) {
     getline(cin, data);
     buffer.push_back(data);
-    string blah = buffer[0];
-    buffer.erase(buffer.begin());
-    cout << "Server: " << blah << endl;
   }
 }

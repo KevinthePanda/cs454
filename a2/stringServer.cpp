@@ -13,8 +13,7 @@ using namespace std;
 //#include "stringServer.h"
 
 // get sockaddr, IPv4 or IPv6:
-void *get_in_addr(struct sockaddr *sa)
-{
+void *get_in_addr(struct sockaddr *sa) {
   if (sa->sa_family == AF_INET) {
     return &(((struct sockaddr_in*)sa)->sin_addr);
   }
@@ -45,7 +44,7 @@ int main() {
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_flags = AI_PASSIVE;
 
-  status = getaddrinfo(NULL, "8888", &hints, &servinfo);
+  status = getaddrinfo(NULL, "0", &hints, &servinfo);
   if (status != 0) {
     fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
     return 1;
@@ -58,7 +57,15 @@ int main() {
 
   status = listen(sock, 5);
 
-  cout << "server: waiting for connections.." << endl;
+  // Get the hostname and port and print them out
+  char hostname[256];
+  gethostname(hostname, 256);
+  cout << "SERVER ADDRESS " << hostname << endl;
+
+  struct sockaddr_in sin;
+  socklen_t len = sizeof(sin);
+  getsockname(sock, (struct sockaddr *)&sin, &len);
+  cout << "SERVER_PORT " << ntohs(sin.sin_port) << endl;
 
   fd_set readfds;
   int n;
@@ -103,8 +110,3 @@ int main() {
 
   return 0;
 }
-
-
-//int main() {
-  //cout << titleCase("test SDFLK kljsdfSDfjs $a") << endl;
-//}
