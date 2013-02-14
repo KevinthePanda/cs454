@@ -11,4 +11,4 @@ class StringServer {
   public:
 
   private:
-}
+};
