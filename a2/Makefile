@@ -1,5 +1,5 @@
 CXX = g++										# compiler
-CXXFLAGS = -g -Wall -Wno-unused-label -MMD
+CXXFLAGS = -g -Wall -Wno-unused-label -MMD -lpthread
 
 OBJECTS1 = stringServer.o
 EXEC1 = stringServer
