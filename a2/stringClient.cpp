@@ -59,7 +59,7 @@ int main() {
   string data;
   vector<string> buffer;
 
-  int sockfd, portno, n;
+  int sockfd, portno;
   struct sockaddr_in serv_addr;
   struct hostent *server;
   portno = atoi(port);
