@@ -1,7 +1,7 @@
 CXX = g++										# compiler
 CXXFLAGS = -g -Wall -Wno-unused-label -MMD -lpthread
 
-OBJECTS1 = stringServer.o
+OBJECTS1 = stringServer.o server.o
 EXEC1 = stringServer
 
 OBJECTS2 = stringClient.o
