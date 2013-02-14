@@ -5,11 +5,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <iostream>
+#include <string>
+
+using namespace std;
 
 //#include "stringServer.h"
 
 //StringServer::StringServer() {
 //}
+
+// get sockaddr, IPv4 or IPv6:
+void *get_in_addr(struct sockaddr *sa)
+{
+  if (sa->sa_family == AF_INET) {
+    return &(((struct sockaddr_in*)sa)->sin_addr);
+  }
+
+  return &(((struct sockaddr_in6*)sa)->sin6_addr);
+}
 
 int main() {
   int status;
@@ -23,34 +37,75 @@ int main() {
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_flags = AI_PASSIVE;
 
-  status = getaddrinfo("www.google.com", "8888", &hints, &servinfo);
+  status = getaddrinfo(NULL, "8888", &hints, &servinfo);
   if (status != 0) {
     fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
     return 1;
   }
 
-  for(p = servinfo;p != NULL; p = p->ai_next) {
-    void *addr;
-    char *ipver;
+  p = servinfo;
+  int sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
 
-    // get the pointer to the address itself,
-    // different fields in IPv4 and IPv6:
-    if (p->ai_family == AF_INET) { // IPv4
-      struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
-      addr = &(ipv4->sin_addr);
-      ipver = "IPv4";
-    } else { // IPv6
-      struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
-      addr = &(ipv6->sin6_addr);
-      ipver = "IPv6";
+  status = bind(sock, servinfo->ai_addr, servinfo->ai_addrlen);
+  
+  status = listen(sock, 5);
+
+  cout << "String Server: waiting for connections.." << endl;
+
+  struct sockaddr_storage their_addr;
+  while (true) {
+    socklen_t addr_size = sizeof their_addr;
+    int new_sock = accept(sock, (struct sockaddr*)&their_addr, &addr_size);
+
+    if (new_sock < 0) {
+      cerr << "String Server: error while accepting connection" << endl;
+      continue;
     }
 
-    // convert the IP to a string and print it:
-    inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
-    printf("  %s: %s\n", ipver, ipstr);
+    inet_ntop(their_addr.ss_family,
+        get_in_addr((struct sockaddr *)&their_addr),
+        ipstr, sizeof ipstr);
+    printf("server: got connection from %s\n", ipstr);
   }
+
+
+  //for(p = servinfo;p != NULL; p = p->ai_next) {
+    //void *addr;
+    //char *ipver;
+
+    //// get the pointer to the address itself,
+    //// different fields in IPv4 and IPv6:
+    //if (p->ai_family == AF_INET) { // IPv4
+      //struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
+      //addr = &(ipv4->sin_addr);
+      //ipver = "IPv4";
+    //} else { // IPv6
+      //struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
+      //addr = &(ipv6->sin6_addr);
+      //ipver = "IPv6";
+    //}
+
+    //// convert the IP to a string and print it:
+    //inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
+    //printf("  %s: %s\n", ipver, ipstr);
+  //}
 
   freeaddrinfo(servinfo); // free the linked list
 
   return 0;
 }
+
+string titleCase(string str) {
+  for (unsigned int i = 0; i < str.length(); i++) {
+    if (i == 0 || str[i-1] == ' ') {
+      str[i] = toupper(str[i]);
+    } else {
+      str[i] = tolower(str[i]);
+    }
+  }
+  return str;
+}
+
+//int main() {
+  //cout << titleCase("test SDFLK kljsdfSDfjs $a") << endl;
+//}
