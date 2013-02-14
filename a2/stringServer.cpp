@@ -60,7 +60,11 @@ int main() {
 
   cout << "server: waiting for connections.." << endl;
 
+  fd_set readfds;
+  int n;
   struct sockaddr_storage their_addr;
+
+
   while (true) {
     socklen_t addr_size = sizeof their_addr;
     int new_sock = accept(sock, (struct sockaddr*)&their_addr, &addr_size);
