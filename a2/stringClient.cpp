@@ -12,17 +12,33 @@
 #include <pthread.h>
 using namespace std;
 
+struct thread_data{
+  int sock;
+  vector<string> *buf;
+};
+
 void *SendToServer(void *threadarg) {
-  vector<string> *dataQueue = (vector<string> *) threadarg;
+  struct thread_data *my_data;
+  my_data = (struct thread_data *) threadarg;
+
+  vector<string> *dataQueue = my_data->buf;
 
   while (true) {
     if ((*dataQueue).size() > 0) {
       string data = (*dataQueue)[0];
-      dataQueue->erase(dataQueue->begin());
-      cout << "Server: " << data << endl;
+      (*dataQueue).erase((*dataQueue).begin());
 
       // send data to server
+      int len = data.length();
+      send(my_data->sock, &len, sizeof(len), 0);
+      send(my_data->sock, data.c_str(), len, 0);
+
       // block on receive
+      string titleCasedData;
+      recv(my_data->sock, &len, sizeof(len), 0);
+      char *msg = new char[len];
+      recv(my_data->sock, msg, len, 0);
+      cout << "Server: " << msg << endl;
 
       sleep(2);
     }
@@ -43,9 +59,6 @@ int main() {
   string data;
   vector<string> buffer;
 
-  pthread_t thread;
-  pthread_create(&thread, NULL, SendToServer, &buffer);
-
   int sockfd, portno, n;
   struct sockaddr_in serv_addr;
   struct hostent *server;
@@ -62,8 +75,14 @@ int main() {
 
   connect(sockfd,(struct sockaddr *)&serv_addr, sizeof(serv_addr));
 
-
   printf("SUCCESS !!! Connection established \n");
+
+  struct thread_data td;
+  td.sock = sockfd;
+  td.buf = &buffer;
+
+  pthread_t thread;
+  pthread_create(&thread, NULL, SendToServer, (void *)&td);
 
   while (true) {
     getline(cin, data);
