@@ -15,12 +15,12 @@ void *SendToServer(void *threadarg) {
     if ((*dataQueue).size() > 0) {
       string data = (*dataQueue)[0];
       dataQueue->erase(dataQueue->begin());
+      cout << "Server: " << data << endl;
 
       // send data to server
       // block on receive
-      // cout << "Server: " << blah << endl;
 
-      sleep(2000);
+      sleep(2);
     }
   }
 

@@ -84,7 +84,7 @@ void StringServer::start() {
     FD_ZERO(&readfds);
     FD_SET(sock, &readfds);
     n = sock;
-    for (vector<int>::iterator it = myConnections.begin(); 
+    for (vector<int>::iterator it = myConnections.begin();
         it != myConnections.end(); ++it) {
       int connection = *it;
       FD_SET(connection, &readfds);
@@ -123,7 +123,7 @@ void StringServer::start() {
       } else {
         // a connection is ready to send us stuff
         cerr << "num connections: " << myConnections.size() << endl;
-        for (vector<int>::iterator it = myConnections.begin(); 
+        for (vector<int>::iterator it = myConnections.begin();
             it != myConnections.end(); ++it) {
           int connection = *it;
           if (FD_ISSET(connection, &readfds)) {
@@ -145,7 +145,7 @@ void StringServer::add_connection(int sock) {
 }
 
 void StringServer::close_connections() {
-  for (vector<int>::iterator it = myToRemove.begin(); 
+  for (vector<int>::iterator it = myToRemove.begin();
       it != myToRemove.end(); ++it) {
     myConnections.erase(remove(myConnections.begin(), myConnections.end(), *it), myConnections.end());
     close(*it);
