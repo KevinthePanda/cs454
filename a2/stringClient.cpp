@@ -30,9 +30,14 @@ void *SendToServer(void *threadarg) {
 int main() {
   char *serverAddress = getenv("SERVER_ADDRESS");
   char *port = getenv("SERVER_PORT");
+
+  if (serverAddress == NULL || port == NULL) {
+    cerr << "Missing SERVER_ADDRESS or SERVER_PORT environment variable" << endl;
+    exit(EXIT_FAILURE);
+  }
+
   string data;
   vector<string> buffer;
-  buffer.push_back("tester");
 
   pthread_t thread;
   pthread_create(&thread, NULL, SendToServer, &buffer);
