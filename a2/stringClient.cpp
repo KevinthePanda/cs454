@@ -12,7 +12,7 @@ void *SendToServer(void *threadarg) {
   vector<string> *dataQueue = (vector<string> *) threadarg;
 
   while (true) {
-    if (*dataQueue.size() > 0) {
+    if ((*dataQueue).size() > 0) {
       string data = (*dataQueue)[0];
       dataQueue->erase(dataQueue->begin());
 
