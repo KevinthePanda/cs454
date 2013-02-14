@@ -57,7 +57,11 @@ int main() {
 
   status = listen(sock, 5);
 
-  cout << "server: waiting for connections.." << endl;
+  // Get the hostname and port and print them out
+  char hostname[256];
+  gethostname(hostname, 256);
+  cout << "SERVER ADDRESS " << hostname << endl;
+  cout << "SERVER_PORT " << "8888" << endl;
 
   struct sockaddr_storage their_addr;
   while (true) {
