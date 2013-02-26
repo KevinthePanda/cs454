@@ -8,8 +8,7 @@
 int f0(int a, int b) {
 
   return a + b;
-}   
-
+}
 
 /* returns: OUT; a, b, c, d: IN */
 long f1(char a, short b, int c, long d) {
@@ -40,10 +39,10 @@ char* f2(float a, double b) {
 }
 
 
-/* 
+/*
  * bubble sort
  * the first element in the array indicates the size of the array
- * a: INOUT array 
+ * a: INOUT array
  */
 
 void f3(long a[]) {
@@ -63,7 +62,7 @@ void f3(long a[]) {
 }
 
 /*
- * print file named by a 
+ * print file named by a
  * a: IN array
  */
 
