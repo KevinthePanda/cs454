@@ -7,7 +7,7 @@ EXEC1 = binder
 OBJECTS2 = server.o
 EXEC2 = librpc.a
 
-OBJECTS3 = server.o server_function_skels.o rpc.o
+OBJECTS3 = server.o server_functions.o server_function_skels.o rpc.o
 EXEC3 = server
 
 OBJECTS4 = client.o rpc.o
