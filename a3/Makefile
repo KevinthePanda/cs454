@@ -10,9 +10,12 @@ EXEC2 = client
 OBJECTS3 = stringClient.o
 EXEC3 = binder
 
-OBJECTS = ${OBJECTS1} ${OBJECTS2} ${OBJECTS3}				# all object files
+OBJECTS4 = server.o
+EXEC4 = librpc.a
+
+OBJECTS = ${OBJECTS1} ${OBJECTS2} ${OBJECTS3}	${OBJECTS4}			# all object files
 DEPENDS = ${OBJECTS:.o=.d}						# substitute ".o" with ".d"
-EXECS = ${EXEC1} ${EXEC2}	${EXEC3}					# all executables
+EXECS = ${EXEC1} ${EXEC2}	${EXEC3} ${EXEC4}					# all executables
 
 .PHONY : all clean
 
@@ -28,6 +31,9 @@ ${EXEC2} : ${OBJECTS2}
 
 ${EXEC3} : ${OBJECTS3}
 	${CXX} ${CXXFLAGS} $^ -o $@
+
+${EXEC4} : ${OBJECTS4}
+	ar rcs librpc.a $^
 
 #############################################################
 

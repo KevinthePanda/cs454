@@ -4,3 +4,7 @@
 *.o
 stringClient
 stringServer
+server
+client
+librpc.a
+binder
