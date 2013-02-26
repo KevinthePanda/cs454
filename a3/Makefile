@@ -1,17 +1,17 @@
 CXX = g++										# compiler
-CXXFLAGS = -g -L. -Wall -lrpc -lpthread
+CXXFLAGS = -L. -Wall -g -lpthread
 
-OBJECTS1 = stringServer.o server.o
-EXEC1 = server
+OBJECTS1 = binder.o
+EXEC1 = binder
 
-OBJECTS2 = stringClient.o
-EXEC2 = client
+OBJECTS2 = server.o
+EXEC2 = librpc.a
 
-OBJECTS3 = stringClient.o
-EXEC3 = binder
+OBJECTS3 = server.o server_function_skels.o rpc.o
+EXEC3 = server
 
-OBJECTS4 = server.o
-EXEC4 = librpc.a
+OBJECTS4 = client.o rpc.o
+EXEC4 = client
 
 OBJECTS = ${OBJECTS1} ${OBJECTS2} ${OBJECTS3}	${OBJECTS4}			# all object files
 DEPENDS = ${OBJECTS:.o=.d}						# substitute ".o" with ".d"
@@ -27,13 +27,13 @@ ${EXEC1} : ${OBJECTS1}							# link step 1st executable
 	${CXX} ${CXXFLAGS} $^ -o $@
 
 ${EXEC2} : ${OBJECTS2}
-	${CXX} ${CXXFLAGS} $^ -o $@
+	ar rcs librpc.a $^
 
 ${EXEC3} : ${OBJECTS3}
-	${CXX} ${CXXFLAGS} $^ -o $@
+	${CXX} ${CXXFLAGS} $^ -lrpc -o $@
 
 ${EXEC4} : ${OBJECTS4}
-	ar rcs librpc.a $^
+	${CXX} ${CXXFLAGS} $^ -lrpc -o $@
 
 #############################################################
 
