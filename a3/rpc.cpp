@@ -1,4 +1,5 @@
 #include "rpc.h"
+#include "constants.h"
 
 int rpcInit() {
   return 0;
@@ -20,6 +21,11 @@ int rpcExecute() {
   return 0;
 }
 
+// Client calls this
 int rpcTerminate() {
+  // verfiy that the request comes from the same ip address/hostname
+  // Inform all of the servers
+  // Wait for servers to terminate
+  // Terminate binder
   return 0;
 }
