@@ -36,7 +36,7 @@ struct CLIENT_BINDER_LOC_REQUEST {
 
 // used with LOC_SUCCESS
 struct CLIENT_BINDER_LOC_SUCCESS {
-  int server_identifier;
+  char* server_identifier;
   int port;
 };
 
@@ -62,9 +62,6 @@ struct CLIENT_SERVER_EXECUTE_SUCCESS {
 // used with EXECUTE_FAILURE
 struct CLIENT_SERVER_EXECUTE_FAILURE {
   int reasonCode;
-};
-
-struct TERMINATE_MESSAGE {
 };
 
 #endif
