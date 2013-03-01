@@ -53,12 +53,12 @@ void Binder::start() {
   // Get the hostname and port and print them out
   char hostname[256];
   gethostname(hostname, 256);
-  cout << "SERVER ADDRESS " << hostname << endl;
+  cout << "BINDER_ADDRESS " << hostname << endl;
 
   struct sockaddr_in sin;
   socklen_t len = sizeof(sin);
   getsockname(sock, (struct sockaddr *)&sin, &len);
-  cout << "SERVER_PORT " << ntohs(sin.sin_port) << endl;
+  cout << "BINDER_PORT " << ntohs(sin.sin_port) << endl;
 
   fd_set readfds;
   int n;
