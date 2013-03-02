@@ -1,5 +1,5 @@
 #include "rpc.h"
-#include "constants.h"
+#include "common.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -83,7 +83,7 @@ int rpcCacheCall(char* name, int* argTypes, void** args) {
 }
 
 int rpcRegister(char* name, int* argTypes, skeleton f) {
-  return 0;
+  return REGISTER_SUCCESS;
 }
 
 int rpcExecute() {
