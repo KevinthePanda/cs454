@@ -8,10 +8,22 @@
 #include <string.h>
 #include <netinet/in.h>
 #include <iostream>
-#include <string>
 #include <vector>
-#include <stdlib.h>
 #include <pthread.h>
+
+using std::cerr;
+using std::cout;
+using std::endl;
+using std::vector;
+
+// Global variables
+int my_binder_sock;
+
+char* my_server_identifier;
+int my_server_port;
+
+vector<struct PROCEDURE_SKELETON> my_server_procedures;
+
 
 // server calls this
 int rpcInit() {
@@ -34,6 +46,7 @@ int rpcInit() {
   binder_addr.sin_port = htons(portno);
 
   connect(sockfd,(struct sockaddr *)&binder_addr, sizeof(binder_addr));
+  my_binder_sock = sockfd;
 
   // create a socket for clients to connect to
   int status;
@@ -58,6 +71,20 @@ int rpcInit() {
   int sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
 
   status = bind(sock, servinfo->ai_addr, servinfo->ai_addrlen);
+
+  status = listen(sock, 5);
+  // get server identifier
+  my_server_identifier = new char[STR_LEN];
+  gethostname(my_server_identifier, STR_LEN);
+  cout << "server " << my_server_identifier << endl;
+
+  // get port number
+  struct sockaddr_in sin;
+  socklen_t len = sizeof(sin);
+  getsockname(sock, (struct sockaddr *)&sin, &len);
+  my_server_port = ntohs(sin.sin_port);
+  cout << "port " << my_server_port << endl;
+
   //status = listen(sock, 5);
 
 
@@ -83,6 +110,35 @@ int rpcCacheCall(char* name, int* argTypes, void** args) {
 }
 
 int rpcRegister(char* name, int* argTypes, skeleton f) {
+  int len;
+  int status;
+
+  // make an entry in local database
+  struct PROCEDURE_SKELETON procedure;
+  // copy the function name so we own it
+  len = strlen(name) + 1;
+  procedure.name = new char[len];
+  strncpy(procedure.name, name, len);
+  // copy the argTypes so we own it
+  len = argTypesLength(argTypes);
+  procedure.argTypes = new int[len];
+  memcpy(procedure.argTypes, argTypes, len*sizeof(int));
+  procedure.f = f;
+  my_server_procedures.push_back(procedure);
+
+  // send the message to binder
+  struct SERVER_BINDER_REGISTER msg;
+  msg.server_identifier = my_server_identifier;
+  msg.port = my_server_port;
+  msg.name = procedure.name;
+  msg.argTypes = procedure.argTypes;
+
+  status = msg.sendMessage(my_binder_sock);
+  if (status < 0) {
+    return status;
+  }
+
+
   return REGISTER_SUCCESS;
 }
 

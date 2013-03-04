@@ -1,6 +1,8 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+#include "rpc.h"
+
 // return types
 #define RETURN_SUCCESS 0
 #define RETURN_WARNING 1
@@ -18,14 +20,36 @@
 #define EXECUTE_FAILURE 6
 #define TERMINATE 7
 
+// Constants
+#define STR_LEN 256
+
+// Util Functions
+int argTypesLength(int* argTypes);
+
+// Data Structs
+struct PROCEDURE_SKELETON {
+  char* name;
+  int* argTypes;
+  skeleton f;
+};
+
+struct PROCEDURE_LOCATION {
+  char* name;
+  int* argTypes;
+  char* server_identifier;
+  int port;
+};
+
 // Message Structs
 
 // used with REGISTER
 struct SERVER_BINDER_REGISTER {
-  int server_identifier;
+  char* server_identifier;
   int port;
-  char *name;
-  char *argTypes;
+  char* name;
+  int *argTypes;
+
+  int sendMessage(int sock);
 };
 
 // used with LOC_REQUEST
