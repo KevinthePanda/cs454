@@ -71,6 +71,8 @@ void Binder::start() {
 
     status = select(n, &readfds, NULL, NULL, NULL);
 
+    cout << "connections: " << myConnections.size() << endl;
+
     if (status == -1) {
       cerr << "ERROR: select failed." << endl;
     } else {
@@ -99,7 +101,7 @@ void Binder::start() {
           }
         }
       }
-      close_connections();
+      //close_connections();
     }
 
   }
