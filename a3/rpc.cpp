@@ -200,7 +200,7 @@ int rpcExecute() {
 
             // receive the message type
             int msg_type = 0;
-            status = recv(connection, &msg_len, sizeof msg_type, 0);
+            status = recv(connection, &msg_type, sizeof msg_type, 0);
 
             if (status < 0) {
               cerr << "ERROR: receive failed" << endl;
@@ -208,7 +208,7 @@ int rpcExecute() {
             }
             if (status == 0) {
               // client has closed the connection
-              my_server_to_remove.push_back(sock);
+              my_server_to_remove.push_back(connection);
               return -1;
             }
 
