@@ -55,7 +55,6 @@ void Binder::start() {
   int n;
   struct sockaddr_storage their_addr;
 
-
   while (true) {
     // build the connection list
     FD_ZERO(&readfds);
