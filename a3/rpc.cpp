@@ -21,6 +21,7 @@ using std::remove;
 // Global variables
 int my_binder_sock;
 
+// for server's use
 char* my_server_identifier;
 int my_server_port;
 int my_server_sock;
@@ -28,6 +29,11 @@ vector<int> my_server_connections;
 vector<int> my_server_to_remove;
 
 vector<struct PROCEDURE_SKELETON> my_server_procedures;
+
+// for client's use
+char* my_client_identifier;
+int my_client_port;
+int my_client_sock;
 
 // server calls this
 int rpcInit() {
@@ -96,6 +102,27 @@ int rpcInit() {
 }
 
 int rpcCall(char* name, int* argTypes, void** args) {
+  // create a socket to do calls to the binder
+  char *binderAddress = getenv("BINDER_ADDRESS");
+  char *binderPort = getenv("BINDER_PORT");
+
+  // open connection to binder
+  int sockfd, portno;
+  struct sockaddr_in binder_addr;
+  struct hostent *binder;
+  portno = atoi(binderPort);
+  sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  binder = gethostbyname(binderAddress);
+
+  bzero((char *) &binder_addr, sizeof(binder_addr));
+  binder_addr.sin_family = AF_INET;
+  bcopy((char *)binder->h_addr,
+        (char *)&binder_addr.sin_addr.s_addr,
+        binder->h_length);
+  binder_addr.sin_port = htons(portno);
+
+  connect(sockfd,(struct sockaddr *)&binder_addr, sizeof(binder_addr));
+  my_binder_sock = sockfd;
 
   // make call to binder
   // socket stuff to binder
@@ -222,8 +249,7 @@ int rpcExecute() {
         }
       }
       // close connections
-      for (vector<int>::iterator it = my_server_to_remove.begin();
-          it != my_server_to_remove.end(); ++it) {
+      for (vector<int>::iterator it = my_server_to_remove.begin(); it != my_server_to_remove.end(); ++it) {
         my_server_connections.erase(remove(my_server_connections.begin(), my_server_connections.end(), *it), my_server_connections.end());
         close(*it);
       }
@@ -240,5 +266,7 @@ int rpcTerminate() {
   // Inform all of the servers
   // Wait for servers to terminate
   // Terminate binder
+  int msg_type = TERMINATE;
+  send(my_binder_sock, &msg_type, sizeof(msg_type), 0);
   return 0;
 }

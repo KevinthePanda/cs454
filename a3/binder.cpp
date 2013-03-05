@@ -125,8 +125,8 @@ void Binder::process_connection(int sock) {
   int status;
 
   // receive the buffer length
-  int msg_len = 0;
-  status = recv(sock, &msg_len, sizeof msg_len, 0);
+  int msg_type = 0;
+  status = recv(sock, &msg_type, sizeof msg_type, 0);
   if (status < 0) {
     cerr << "ERROR: receive failed" << endl;
     return;
@@ -137,35 +137,13 @@ void Binder::process_connection(int sock) {
     return;
   }
 
-  // receive the string
-  char* msg = new char[msg_len];
-  status = recv(sock, msg, msg_len, 0);
-  if (status < 0) {
-    cerr << "ERROR: receive failed" << endl;
-    return;
+  cout << "msg type: " << msg_type << endl;
+  switch (msg_type) {
+    case TERMINATE:
+      // check sender and if right address, pass message to servers
+      break;
   }
 
-  // title case the string
-  string str(msg);
-  string result = str;
-
-  // send the buffer length
-  const char* to_send = result.c_str();
-  msg_len = strlen(to_send) + 1;
-  status = send(sock, &msg_len, sizeof msg_len, 0);
-  if (status < 0) {
-    cerr << "ERROR: send failed" << endl;
-    return;
-  }
-
-  // send the result string
-  status = send(sock, to_send, msg_len, 0);
-  if (status < 0) {
-    cerr << "ERROR: send failed" << endl;
-    return;
-  }
-
-  delete[] msg;
 }
 
 int main() {
