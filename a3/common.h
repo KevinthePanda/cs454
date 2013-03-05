@@ -31,14 +31,14 @@ struct PROCEDURE_SKELETON {
   char* name;
   int* argTypes;
   skeleton f;
-};
+}; // Used on server
 
 struct PROCEDURE_LOCATION {
   char* name;
   int* argTypes;
   char* server_identifier;
   int port;
-};
+}; // Used on binder
 
 // Message Structs
 
@@ -55,18 +55,24 @@ struct SERVER_BINDER_REGISTER {
 // used with LOC_REQUEST
 struct CLIENT_BINDER_LOC_REQUEST {
   char *name;
-  char *argTypes;
+  int *argTypes;
+
+  int sendMessage(int sock);
 };
 
 // used with LOC_SUCCESS
 struct CLIENT_BINDER_LOC_SUCCESS {
   char* server_identifier;
   int port;
+
+  int sendMessage(int sock);
 };
 
 // used with LOC_FAILURE
 struct CLIENT_BINDER_LOC_FAILURE {
   int reasonCode;
+
+  int sendMessage(int sock);
 };
 
 // used with EXECUTE
@@ -74,6 +80,8 @@ struct CLIENT_SERVER_EXECUTE {
   char *name;
   char *argTypes;
   char *args;
+
+  int sendMessage(int sock);
 };
 
 // used with EXECUTE_SUCCESS
@@ -81,11 +89,15 @@ struct CLIENT_SERVER_EXECUTE_SUCCESS {
   char *name;
   char *argTypes;
   char *args;
+
+  int sendMessage(int sock);
 };
 
 // used with EXECUTE_FAILURE
 struct CLIENT_SERVER_EXECUTE_FAILURE {
   int reasonCode;
+
+  int sendMessage(int sock);
 };
 
 #endif

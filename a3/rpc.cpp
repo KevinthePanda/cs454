@@ -96,12 +96,13 @@ int rpcInit() {
 }
 
 int rpcCall(char* name, int* argTypes, void** args) {
-  char *binderAddress = getenv("BINDER_ADDRESS");
-  char *binderPort = getenv("BINDER_PORT");
 
   // make call to binder
   // socket stuff to binder
   struct CLIENT_BINDER_LOC_REQUEST req;
+  req.name = name;
+  req.argTypes = argTypes;
+  req.sendMessage(my_binder_sock);
 
   // if (returnMessage == CLIENT_BINDER_LOC_FAILURE) {
   //   return RETURN_FAILURE;
