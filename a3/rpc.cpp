@@ -102,6 +102,8 @@ int rpcInit() {
 }
 
 int rpcCall(char* name, int* argTypes, void** args) {
+  int status;
+
   // create a socket to do calls to the binder
   char *binderAddress = getenv("BINDER_ADDRESS");
   char *binderPort = getenv("BINDER_PORT");
@@ -129,11 +131,95 @@ int rpcCall(char* name, int* argTypes, void** args) {
   struct CLIENT_BINDER_LOC_REQUEST req;
   req.name = name;
   req.argTypes = argTypes;
-  req.sendMessage(my_binder_sock);
+  status = req.sendMessage(my_binder_sock);
+  if (status < 0) {
+    return status;
+  }
 
-  // if (returnMessage == CLIENT_BINDER_LOC_FAILURE) {
-  //   return RETURN_FAILURE;
-  // }
+  // receive response to location request
+  // message type
+  int msg_type = -1;
+  status = recv(my_binder_sock, &msg_type, sizeof msg_type, 0);
+  if (status < 0) {
+    cerr << "ERROR: receive failed" << endl;
+    return RETURN_FAILURE;
+  }
+  // location request failure
+  if (msg_type == LOC_FAILURE) {
+    // TODO get failure message
+    return RETURN_FAILURE;
+  }
+  if (msg_type != LOC_SUCCESS) {
+    return RETURN_FAILURE;
+  }
+
+  // location request success
+  // get the response
+  struct CLIENT_BINDER_LOC_SUCCESS* res =
+    CLIENT_BINDER_LOC_SUCCESS::readMessage(my_binder_sock);
+  if (res == NULL) {
+    return RETURN_FAILURE;
+  }
+
+  // make connection to server
+  // TODO refactor this block?
+  int server_sock;
+  struct sockaddr_in server_addr;
+  struct hostent *server;
+  portno = res->port;
+  server_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  server = gethostbyname(res->server_identifier);
+
+  bzero((char *) &binder_addr, sizeof(binder_addr));
+  binder_addr.sin_family = AF_INET;
+  bcopy((char *)server->h_addr,
+        (char *)&binder_addr.sin_addr.s_addr,
+        server->h_length);
+  binder_addr.sin_port = htons(portno);
+
+  connect(server_sock,(struct sockaddr *)&binder_addr, sizeof(binder_addr));
+
+  // send execute message
+  struct CLIENT_SERVER_EXECUTE executeReq;
+  executeReq.name = name;
+  executeReq.argTypes = argTypes;
+  executeReq.args = args;
+  status = executeReq.sendMessage(server_sock);
+  if (status < 0) {
+    return status;
+  }
+
+  // receive response to execute message
+  // message type
+  msg_type = -1;
+  status = recv(my_binder_sock, &msg_type, sizeof msg_type, 0);
+  if (status < 0) {
+    cerr << "ERROR: receive failed" << endl;
+    return RETURN_FAILURE;
+  }
+  // execute failure
+  if (msg_type == EXECUTE_FAILURE) {
+    // TODO get failure message
+    return RETURN_FAILURE;
+  }
+  if (msg_type != EXECUTE_SUCCESS) {
+    return RETURN_FAILURE;
+  }
+
+  // execute success
+  // get the response
+  struct CLIENT_SERVER_EXECUTE_SUCCESS* executeRes =
+    CLIENT_SERVER_EXECUTE_SUCCESS::readMessage(server_sock);
+  if (executeRes == NULL) {
+    return RETURN_FAILURE;
+  }
+
+  // set the returned args
+  args = executeRes->args;
+
+  // close connection
+  close(my_binder_sock);
+
   return RETURN_SUCCESS;
 }
 

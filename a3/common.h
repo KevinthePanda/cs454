@@ -9,6 +9,8 @@
 #define RETURN_FAILURE -1
 #define REGISTER_SUCCESS 0
 #define REGISTER_FAILURE 1
+#define SEND_FAILURE -2
+#define RECEIVE_FAILURE -3
 
 // Message Types
 #define REGISTER 0
@@ -25,6 +27,7 @@
 
 // Util Functions
 int argTypesLength(int* argTypes);
+void checkStatus(int status, char* msg = "");
 
 // Data Structs
 struct PROCEDURE_SKELETON {
@@ -41,6 +44,10 @@ struct PROCEDURE_LOCATION {
 }; // Used on binder
 
 // Message Structs
+
+// TODO maybe need destructors for messages
+// NOTE some messages don't own their pointers, so might be better to
+// deallocate manually
 
 // used with REGISTER
 struct SERVER_BINDER_REGISTER {
@@ -65,6 +72,7 @@ struct CLIENT_BINDER_LOC_SUCCESS {
   char* server_identifier;
   int port;
 
+  static struct CLIENT_BINDER_LOC_SUCCESS* readMessage(int sock);
   int sendMessage(int sock);
 };
 
@@ -78,8 +86,8 @@ struct CLIENT_BINDER_LOC_FAILURE {
 // used with EXECUTE
 struct CLIENT_SERVER_EXECUTE {
   char *name;
-  char *argTypes;
-  char *args;
+  int *argTypes;
+  void** args;
 
   int sendMessage(int sock);
 };
@@ -87,9 +95,10 @@ struct CLIENT_SERVER_EXECUTE {
 // used with EXECUTE_SUCCESS
 struct CLIENT_SERVER_EXECUTE_SUCCESS {
   char *name;
-  char *argTypes;
-  char *args;
+  int *argTypes;
+  void** args;
 
+  static struct CLIENT_SERVER_EXECUTE_SUCCESS* readMessage(int sock);
   int sendMessage(int sock);
 };
 

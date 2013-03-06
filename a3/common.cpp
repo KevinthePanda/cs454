@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "common.h"
+#include "error.h"
 
 using std::cerr;
 using std::cout;
@@ -21,6 +22,13 @@ int argTypesLength(int* argTypes) {
     elem = argTypes[i];
   }
   return i;
+}
+
+void checkStatus(int status, char* msg) {
+  if (status < 0) {
+    RPCError err(status, msg);
+    throw err;
+  }
 }
 
 //===================================================
@@ -82,12 +90,72 @@ int SERVER_BINDER_REGISTER::sendMessage(int sock) {
 // CLIENT_BINDER_LOC_REQUEST Member Functions
 //===================================================
 int CLIENT_BINDER_LOC_REQUEST::sendMessage(int sock) {
+  int status;
+  int len;
+
+  // send the msg type
+  int msg_type = LOC_REQUEST;
+  status = send(sock, &msg_type, sizeof msg_type, 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return RETURN_FAILURE;
+  }
+
+  // send the name length
+  len = strlen(name) + 1;
+  status = send(sock, &len, sizeof len, 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return RETURN_FAILURE;
+  }
+
+  // send the name
+  status = send(sock, name, len, 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return RETURN_FAILURE;
+  }
+
+  // send the argTypes
+  len = argTypesLength(argTypes)*(sizeof(int));
+  status = send(sock, argTypes, len, 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return RETURN_FAILURE;
+  }
+
   return RETURN_SUCCESS;
 }
 
 //===================================================
 // CLIENT_BINDER_LOC_SUCCESS Member Functions
 //===================================================
+struct CLIENT_BINDER_LOC_SUCCESS*
+CLIENT_BINDER_LOC_SUCCESS::readMessage(int sock) {
+  int status;
+  struct CLIENT_BINDER_LOC_SUCCESS* ret = new struct CLIENT_BINDER_LOC_SUCCESS();
+
+  try {
+    // receive the server identifier
+    ret->server_identifier = new char[STR_LEN];
+    status = recv(sock, ret->server_identifier, STR_LEN, 0);
+    if (status < 0) {
+      checkStatus(RECEIVE_FAILURE, "reading CLIENT_BINDER_LOC_SUCCESS message");
+    }
+
+    // receive the port
+    status = recv(sock, &(ret->port), sizeof ret->port, 0);
+    if (status < 0) {
+      checkStatus(RECEIVE_FAILURE, "reading CLIENT_BINDER_LOC_SUCCESS message");
+    }
+  } catch (RPCError& e) {
+    delete ret;
+    ret = NULL;
+  }
+
+  return ret;
+}
+
 int CLIENT_BINDER_LOC_SUCCESS::sendMessage(int sock) {
   return RETURN_SUCCESS;
 }
@@ -109,6 +177,28 @@ int CLIENT_SERVER_EXECUTE::sendMessage(int sock) {
 //===================================================
 // CLIENT_SERVER_EXECUTE_SUCCESS Member Functions
 //===================================================
+struct CLIENT_SERVER_EXECUTE_SUCCESS*
+CLIENT_SERVER_EXECUTE_SUCCESS::readMessage(int sock) {
+  int status;
+  struct CLIENT_SERVER_EXECUTE_SUCCESS* ret = new struct CLIENT_SERVER_EXECUTE_SUCCESS();
+
+  try {
+    // receive the name length
+    // receive the name
+    // receive the arg types
+    // receive the args
+
+    //status = recv(sock, &(ret->port), sizeof ret->port, 0);
+    //if (status < 0) {
+      //checkStatus(RECEIVE_FAILURE, "reading CLIENT_BINDER_LOC_SUCCESS message");
+    //}
+  } catch (RPCError& e) {
+    delete ret;
+    ret = NULL;
+  }
+
+  return ret;
+}
 int CLIENT_SERVER_EXECUTE_SUCCESS::sendMessage(int sock) {
   return RETURN_SUCCESS;
 }

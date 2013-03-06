@@ -4,7 +4,7 @@ CXXFLAGS = -L. -Wall -g -lpthread
 OBJECTS1 = binder.o
 EXEC1 = binder
 
-OBJECTS2 = rpc.o common.o
+OBJECTS2 = rpc.o common.o error.o
 EXEC2 = librpc.a
 
 OBJECTS3 = server.o server_functions.o server_function_skels.o rpc.o
