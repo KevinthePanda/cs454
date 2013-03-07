@@ -64,6 +64,7 @@ struct CLIENT_BINDER_LOC_REQUEST {
   char *name;
   int *argTypes;
 
+  static struct CLIENT_BINDER_LOC_REQUEST* readMessage(int sock);
   int sendMessage(int sock);
 };
 

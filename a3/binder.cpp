@@ -77,8 +77,6 @@ void Binder::start() {
 
     status = select(n, &readfds, NULL, NULL, NULL);
 
-    cout << "connections: " << myConnections.size() << endl;
-
     if (status == -1) {
       cerr << "ERROR: select failed." << endl;
     } else {
@@ -144,7 +142,6 @@ void Binder::process_connection(int sock) {
     return;
   }
 
-  cout << "msg type: " << msg_type << endl;
   switch (msg_type) {
     case TERMINATE:
       // check that the sender has the right address
@@ -155,6 +152,11 @@ void Binder::process_connection(int sock) {
       }
       close_connections();
       shutdown = true;
+      break;
+    case LOC_REQUEST:
+      struct CLIENT_BINDER_LOC_REQUEST* res = CLIENT_BINDER_LOC_REQUEST::readMessage(sock);
+      cout << res->name << endl;
+      cout << res->argTypes[0] << " " << res->argTypes[1] << endl;
       break;
   }
 
