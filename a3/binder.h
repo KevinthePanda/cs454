@@ -10,6 +10,7 @@ class Binder {
   private:
     vector<int> myConnections;
     vector<int> myToRemove;
+    bool shutdown;
 
   // Functions
   public:

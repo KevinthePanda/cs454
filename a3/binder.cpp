@@ -15,6 +15,7 @@
 using namespace std;
 
 Binder::Binder() {
+  shutdown = false;
 }
 
 void Binder::start() {
@@ -56,6 +57,11 @@ void Binder::start() {
   struct sockaddr_storage their_addr;
 
   while (true) {
+    // shutdown condition is met
+    if (shutdown) {
+      break;
+    }
+
     // build the connection list
     FD_ZERO(&readfds);
     FD_SET(sock, &readfds);
@@ -101,7 +107,6 @@ void Binder::start() {
           }
         }
       }
-      //close_connections();
     }
 
   }
@@ -142,7 +147,14 @@ void Binder::process_connection(int sock) {
   cout << "msg type: " << msg_type << endl;
   switch (msg_type) {
     case TERMINATE:
-      // check sender and if right address, pass message to servers
+      // check that the sender has the right address
+      for (vector<int>::iterator it = myConnections.begin(); it != myConnections.end(); ++it) {
+        int connection = *it;
+        msg_type = TERMINATE;
+        send(connection, &msg_type, sizeof(msg_type), 0);
+      }
+      close_connections();
+      shutdown = true;
       break;
   }
 
