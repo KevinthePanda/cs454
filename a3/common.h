@@ -28,6 +28,7 @@
 // Util Functions
 int argTypesLength(int* argTypes);
 void checkStatus(int status, char* msg = "");
+int getSizeFromArgTypes(int* argTypes);
 
 // Data Structs
 struct PROCEDURE_SKELETON {
@@ -91,6 +92,7 @@ struct CLIENT_SERVER_EXECUTE {
   int *argTypes;
   void** args;
 
+  static struct CLIENT_SERVER_EXECUTE* readMessage(int sock);
   int sendMessage(int sock);
 };
 
@@ -108,6 +110,7 @@ struct CLIENT_SERVER_EXECUTE_SUCCESS {
 struct CLIENT_SERVER_EXECUTE_FAILURE {
   int reasonCode;
 
+  static struct CLIENT_SERVER_EXECUTE_FAILURE* readMessage(int sock);
   int sendMessage(int sock);
 };
 
