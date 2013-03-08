@@ -31,6 +31,34 @@ void checkStatus(int status, char* msg) {
   }
 }
 
+int getSizeFromArgTypes(int* argTypes) {
+  int total = 0;
+  int length = argTypesLength(argTypes);
+  for (int i = 0; i < length; i++) {
+    switch ((argTypes[i] & (7 << 16)) >> 16) {
+      case ARG_CHAR:
+        total += sizeof(char);
+        break;
+      case ARG_SHORT:
+        total += sizeof(short);
+        break;
+      case ARG_INT:
+        total += sizeof(int);
+        break;
+      case ARG_LONG:
+        total += sizeof(long);
+        break;
+      case ARG_DOUBLE:
+        total += sizeof(double);
+        break;
+      case ARG_FLOAT:
+        total += sizeof(float);
+        break;
+    }
+  }
+  return total;
+}
+
 //===================================================
 // SERVER_BINDER_REGISTER Member Functions
 //===================================================
@@ -114,7 +142,7 @@ struct CLIENT_BINDER_LOC_REQUEST* CLIENT_BINDER_LOC_REQUEST::readMessage(int soc
     }
 
     ret->argTypes = new int[len];
-    status = recv(sock, ret->argTypes, len*sizeof(int), 0);
+    status = recv(sock, ret->argTypes, len * sizeof(int), 0);
     if (status < 0) {
       checkStatus(RECEIVE_FAILURE, "reading CLIENT_BINDER_LOC_REQUEST message");
     }
@@ -132,7 +160,7 @@ int CLIENT_BINDER_LOC_REQUEST::sendMessage(int sock) {
 
   // send the msg type
   int msg_type = LOC_REQUEST;
-  status = send(sock, &msg_type, sizeof msg_type, 0);
+  status = send(sock, &msg_type, sizeof(msg_type), 0);
   if (status < 0) {
     cerr << "ERROR: send failed" << endl;
     return RETURN_FAILURE;
@@ -140,7 +168,7 @@ int CLIENT_BINDER_LOC_REQUEST::sendMessage(int sock) {
 
   // send the name length
   len = strlen(name) + 1;
-  status = send(sock, &len, sizeof len, 0);
+  status = send(sock, &len, sizeof(len), 0);
   if (status < 0) {
     cerr << "ERROR: send failed" << endl;
     return RETURN_FAILURE;
@@ -153,18 +181,16 @@ int CLIENT_BINDER_LOC_REQUEST::sendMessage(int sock) {
     return RETURN_FAILURE;
   }
 
-  // send the args length
+  // send the argsTypes length
   len = argTypesLength(argTypes);
-  status = send(sock, &len, sizeof len, 0);
+  status = send(sock, &len, sizeof(len), 0);
   if (status < 0) {
     cerr << "ERROR: send failed" << endl;
     return RETURN_FAILURE;
   }
 
   // send the argTypes
-  //len = argTypesLength(argTypes)*(sizeof(int));
-  //len = argTypesLength(argTypes);
-  status = send(sock, argTypes, len*sizeof(int), 0);
+  status = send(sock, argTypes, len * sizeof(int), 0);
   if (status < 0) {
     cerr << "ERROR: send failed" << endl;
     return RETURN_FAILURE;
@@ -216,28 +242,48 @@ int CLIENT_BINDER_LOC_FAILURE::sendMessage(int sock) {
 //===================================================
 // CLIENT_SERVER_EXECUTE Member Functions
 //===================================================
-int CLIENT_SERVER_EXECUTE::sendMessage(int sock) {
-  return RETURN_SUCCESS;
-}
-
-//===================================================
-// CLIENT_SERVER_EXECUTE_SUCCESS Member Functions
-//===================================================
-struct CLIENT_SERVER_EXECUTE_SUCCESS*
-CLIENT_SERVER_EXECUTE_SUCCESS::readMessage(int sock) {
+struct CLIENT_SERVER_EXECUTE*
+CLIENT_SERVER_EXECUTE::readMessage(int sock) {
   int status;
-  struct CLIENT_SERVER_EXECUTE_SUCCESS* ret = new struct CLIENT_SERVER_EXECUTE_SUCCESS();
+  struct CLIENT_SERVER_EXECUTE* ret = new struct CLIENT_SERVER_EXECUTE();
 
   try {
-    // receive the name length
-    // receive the name
-    // receive the arg types
-    // receive the args
+    // receive the function name
+    int len = 0;
+    status = recv(sock, &len, sizeof(len), 0);
+    if (status < 0) {
+      checkStatus(RECEIVE_FAILURE, "reading CLIENT_BINDER_LOC_REQUEST message");
+    }
 
-    //status = recv(sock, &(ret->port), sizeof ret->port, 0);
-    //if (status < 0) {
-      //checkStatus(RECEIVE_FAILURE, "reading CLIENT_BINDER_LOC_SUCCESS message");
-    //}
+    ret->name = new char[len];
+    status = recv(sock, ret->name, len, 0);
+    if (status < 0) {
+      checkStatus(RECEIVE_FAILURE, "reading CLIENT_BINDER_LOC_REQUEST message");
+    }
+
+    // receive the function argsTypes
+    status = recv(sock, &len, sizeof(len), 0);
+    if (status < 0) {
+      checkStatus(RECEIVE_FAILURE, "reading CLIENT_BINDER_LOC_REQUEST message");
+    }
+
+    ret->argTypes = new int[len];
+    status = recv(sock, ret->argTypes, len * sizeof(int), 0);
+    if (status < 0) {
+      checkStatus(RECEIVE_FAILURE, "reading CLIENT_BINDER_LOC_REQUEST message");
+    }
+    ret->args = (void **)malloc(len * sizeof(void *));
+
+    // receive the function args
+    status = recv(sock, &len, sizeof(len), 0);
+    if (status < 0) {
+      checkStatus(RECEIVE_FAILURE, "reading CLIENT_BINDER_LOC_REQUEST message");
+    }
+
+    status = recv(sock, ret->args, len, 0);
+    if (status < 0) {
+      checkStatus(RECEIVE_FAILURE, "reading CLIENT_BINDER_LOC_REQUEST message");
+    }
   } catch (RPCError& e) {
     delete ret;
     ret = NULL;
@@ -245,13 +291,218 @@ CLIENT_SERVER_EXECUTE_SUCCESS::readMessage(int sock) {
 
   return ret;
 }
+
+int CLIENT_SERVER_EXECUTE::sendMessage(int sock) {
+  int status;
+  int len;
+
+  // send the msg type
+  int msg_type = EXECUTE_SUCCESS;
+  status = send(sock, &msg_type, sizeof(msg_type), 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return RETURN_FAILURE;
+  }
+
+  // send the name length
+  len = strlen(name) + 1;
+  status = send(sock, &len, sizeof len, 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return REGISTER_FAILURE;
+  }
+
+  // send the name
+  status = send(sock, name, len, 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return REGISTER_FAILURE;
+  }
+
+  // send the argsTypes length
+  len = argTypesLength(argTypes);
+  status = send(sock, &len, sizeof(len), 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return RETURN_FAILURE;
+  }
+
+  // send the argTypes
+  status = send(sock, argTypes, len * sizeof(int), 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return RETURN_FAILURE;
+  }
+
+  // send the args length
+  len = getSizeFromArgTypes(argTypes);
+  status = send(sock, &len, sizeof(len), 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return RETURN_FAILURE;
+  }
+
+  // send the args
+  status = send(sock, args, len, 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return RETURN_FAILURE;
+  }
+
+  return RETURN_SUCCESS;
+
+}
+
+//===================================================
+// CLIENT_SERVER_EXECUTE_SUCCESS Member Functions
+//===================================================
+struct CLIENT_SERVER_EXECUTE_SUCCESS* CLIENT_SERVER_EXECUTE_SUCCESS::readMessage(int sock) {
+  int status;
+  struct CLIENT_SERVER_EXECUTE_SUCCESS* ret = new struct CLIENT_SERVER_EXECUTE_SUCCESS();
+
+  try {
+    // receive the function name
+    int len = 0;
+    status = recv(sock, &len, sizeof(len), 0);
+    if (status < 0) {
+      checkStatus(RECEIVE_FAILURE, "reading CLIENT_BINDER_LOC_REQUEST message");
+    }
+
+    ret->name = new char[len];
+    status = recv(sock, ret->name, len, 0);
+    if (status < 0) {
+      checkStatus(RECEIVE_FAILURE, "reading CLIENT_BINDER_LOC_REQUEST message");
+    }
+
+    // receive the function argsTypes
+    status = recv(sock, &len, sizeof(len), 0);
+    if (status < 0) {
+      checkStatus(RECEIVE_FAILURE, "reading CLIENT_BINDER_LOC_REQUEST message");
+    }
+
+    ret->argTypes = new int[len];
+    status = recv(sock, ret->argTypes, len * sizeof(int), 0);
+    if (status < 0) {
+      checkStatus(RECEIVE_FAILURE, "reading CLIENT_BINDER_LOC_REQUEST message");
+    }
+    ret->args = (void **)malloc(len * sizeof(void *));
+
+    // receive the function args
+    status = recv(sock, &len, sizeof(len), 0);
+    if (status < 0) {
+      checkStatus(RECEIVE_FAILURE, "reading CLIENT_BINDER_LOC_REQUEST message");
+    }
+
+    status = recv(sock, ret->args, len, 0);
+    if (status < 0) {
+      checkStatus(RECEIVE_FAILURE, "reading CLIENT_BINDER_LOC_REQUEST message");
+    }
+  } catch (RPCError& e) {
+    delete ret;
+    ret = NULL;
+  }
+
+  return ret;
+}
+
 int CLIENT_SERVER_EXECUTE_SUCCESS::sendMessage(int sock) {
+  int status;
+  int len;
+
+  // send the msg type
+  int msg_type = EXECUTE_SUCCESS;
+  status = send(sock, &msg_type, sizeof(msg_type), 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return RETURN_FAILURE;
+  }
+
+  // send the name length
+  len = strlen(name) + 1;
+  status = send(sock, &len, sizeof len, 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return REGISTER_FAILURE;
+  }
+
+  // send the name
+  status = send(sock, name, len, 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return REGISTER_FAILURE;
+  }
+
+  // send the argsTypes length
+  len = argTypesLength(argTypes);
+  status = send(sock, &len, sizeof(len), 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return RETURN_FAILURE;
+  }
+
+  // send the argTypes
+  status = send(sock, argTypes, len * sizeof(int), 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return RETURN_FAILURE;
+  }
+
+  // send the args length
+  len = getSizeFromArgTypes(argTypes);
+  status = send(sock, &len, sizeof(len), 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return RETURN_FAILURE;
+  }
+
+  // send the args
+  status = send(sock, args, len, 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return RETURN_FAILURE;
+  }
+
   return RETURN_SUCCESS;
 }
 
 //===================================================
 // CLIENT_SERVER_EXECUTE_FAILURE Member Functions
 //===================================================
+struct CLIENT_SERVER_EXECUTE_FAILURE*
+CLIENT_SERVER_EXECUTE_FAILURE::readMessage(int sock) {
+  int status;
+  struct CLIENT_SERVER_EXECUTE_FAILURE* ret = new struct CLIENT_SERVER_EXECUTE_FAILURE();
+
+  try {
+    status = recv(sock, &(ret->reasonCode), sizeof(ret->reasonCode), 0);
+    if (status < 0) {
+      checkStatus(RECEIVE_FAILURE, "reading CLIENT_SERVER_EXECUTE_FAILURE message");
+    }
+  } catch (RPCError& e) {
+    delete ret;
+    ret = NULL;
+  }
+
+  return ret;
+}
+
 int CLIENT_SERVER_EXECUTE_FAILURE::sendMessage(int sock) {
+  int status;
+
+  // send the msg type
+  int msg_type = EXECUTE_FAILURE;
+  status = send(sock, &msg_type, sizeof(msg_type), 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return RETURN_FAILURE;
+  }
+
+  // send the failure reason code
+  status = send(sock, &reasonCode, sizeof(reasonCode), 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return RETURN_FAILURE;
+  }
+
   return RETURN_SUCCESS;
 }
