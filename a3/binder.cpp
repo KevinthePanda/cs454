@@ -156,7 +156,7 @@ void Binder::process_connection(int sock) {
     case LOC_REQUEST:
       struct CLIENT_BINDER_LOC_REQUEST* res = CLIENT_BINDER_LOC_REQUEST::readMessage(sock);
       cout << res->name << endl;
-      cout << res->argTypes[0] << " " << res->argTypes[1] << endl;
+      cout << res->argTypes[0] << " " << res->argTypes[1] << " " << res->argTypes[2] << endl;
       break;
   }
 

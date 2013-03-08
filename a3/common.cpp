@@ -102,20 +102,19 @@ struct CLIENT_BINDER_LOC_REQUEST* CLIENT_BINDER_LOC_REQUEST::readMessage(int soc
     }
 
     ret->name = new char[len];
-    status = recv(sock, ret->name, sizeof(ret->name), 0);
+    status = recv(sock, ret->name, len, 0);
     if (status < 0) {
       checkStatus(RECEIVE_FAILURE, "reading CLIENT_BINDER_LOC_REQUEST message");
     }
 
     // receive the function args
-    len = 0;
     status = recv(sock, &len, sizeof(len), 0);
     if (status < 0) {
       checkStatus(RECEIVE_FAILURE, "reading CLIENT_BINDER_LOC_REQUEST message");
     }
 
     ret->argTypes = new int[len];
-    status = recv(sock, ret->argTypes, len, 0);
+    status = recv(sock, ret->argTypes, len*sizeof(int), 0);
     if (status < 0) {
       checkStatus(RECEIVE_FAILURE, "reading CLIENT_BINDER_LOC_REQUEST message");
     }
@@ -154,9 +153,18 @@ int CLIENT_BINDER_LOC_REQUEST::sendMessage(int sock) {
     return RETURN_FAILURE;
   }
 
+  // send the args length
+  len = argTypesLength(argTypes);
+  status = send(sock, &len, sizeof len, 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return RETURN_FAILURE;
+  }
+
   // send the argTypes
-  len = argTypesLength(argTypes)*(sizeof(int));
-  status = send(sock, argTypes, len, 0);
+  //len = argTypesLength(argTypes)*(sizeof(int));
+  //len = argTypesLength(argTypes);
+  status = send(sock, argTypes, len*sizeof(int), 0);
   if (status < 0) {
     cerr << "ERROR: send failed" << endl;
     return RETURN_FAILURE;
@@ -176,7 +184,7 @@ CLIENT_BINDER_LOC_SUCCESS::readMessage(int sock) {
   try {
     // receive the server identifier
     ret->server_identifier = new char[STR_LEN];
-    status = recv(sock, ret->server_identifier, STR_LEN, 0);
+    status = recv(sock, ret->server_identifier, sizeof(ret->server_identifier), 0);
     if (status < 0) {
       checkStatus(RECEIVE_FAILURE, "reading CLIENT_BINDER_LOC_SUCCESS message");
     }
