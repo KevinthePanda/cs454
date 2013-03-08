@@ -21,7 +21,7 @@ int argTypesLength(int* argTypes) {
     i++;
     elem = argTypes[i];
   }
-  return i;
+  return i+1;
 }
 
 void checkStatus(int status, char* msg) {
@@ -34,6 +34,56 @@ void checkStatus(int status, char* msg) {
 //===================================================
 // SERVER_BINDER_REGISTER Member Functions
 //===================================================
+struct SERVER_BINDER_REGISTER* SERVER_BINDER_REGISTER::readMessage(int sock) {
+  int status;
+  struct SERVER_BINDER_REGISTER* ret = new struct SERVER_BINDER_REGISTER();
+
+  try {
+    // receive the server identifier
+    ret->server_identifier = new char[STR_LEN];
+    status = recv(sock, ret->server_identifier, STR_LEN, 0);
+    if (status < 0) {
+      checkStatus(RECEIVE_FAILURE, "reading SERVER_BINDER_REGISTER message");
+    }
+
+    // receive the port
+    status = recv(sock, &(ret->port), sizeof ret->port, 0);
+    if (status < 0) {
+      checkStatus(RECEIVE_FAILURE, "reading SERVER_BINDER_REGISTER message");
+    }
+
+    // receive the function name
+    int len = 0;
+    status = recv(sock, &len, sizeof(len), 0);
+    if (status < 0) {
+      checkStatus(RECEIVE_FAILURE, "reading SERVER_BINDER_REGISTER message");
+    }
+
+    ret->name = new char[len];
+    status = recv(sock, ret->name, len, 0);
+    if (status < 0) {
+      checkStatus(RECEIVE_FAILURE, "reading SERVER_BINDER_REGISTER message");
+    }
+
+    // receive the function args
+    status = recv(sock, &len, sizeof(len), 0);
+    if (status < 0) {
+      checkStatus(RECEIVE_FAILURE, "reading SERVER_BINDER_REGISTER message");
+    }
+
+    ret->argTypes = new int[len];
+    status = recv(sock, ret->argTypes, len*sizeof(int), 0);
+    if (status < 0) {
+      checkStatus(RECEIVE_FAILURE, "reading SERVER_BINDER_REGISTER message");
+    }
+  } catch (RPCError& e) {
+    delete ret;
+    ret = NULL;
+  }
+
+  return ret;
+}
+
 int SERVER_BINDER_REGISTER::sendMessage(int sock) {
   int status;
   int len;
@@ -75,8 +125,16 @@ int SERVER_BINDER_REGISTER::sendMessage(int sock) {
     return REGISTER_FAILURE;
   }
 
+  // send the argTypes length
+  len = argTypesLength(argTypes);
+  status = send(sock, &len, sizeof len, 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return REGISTER_FAILURE;
+  }
+
   // send the argTypes
-  len = argTypesLength(argTypes)*(sizeof(int));
+  len = len*(sizeof(int));
   status = send(sock, argTypes, len, 0);
   if (status < 0) {
     cerr << "ERROR: send failed" << endl;
@@ -164,6 +222,7 @@ int CLIENT_BINDER_LOC_REQUEST::sendMessage(int sock) {
   // send the argTypes
   //len = argTypesLength(argTypes)*(sizeof(int));
   //len = argTypesLength(argTypes);
+  //cout << argTypes[0] << " " << argTypes[1] << " " << argTypes[2] << endl;
   status = send(sock, argTypes, len*sizeof(int), 0);
   if (status < 0) {
     cerr << "ERROR: send failed" << endl;

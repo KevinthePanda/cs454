@@ -153,11 +153,18 @@ void Binder::process_connection(int sock) {
       close_connections();
       shutdown = true;
       break;
-    case LOC_REQUEST:
-      struct CLIENT_BINDER_LOC_REQUEST* res = CLIENT_BINDER_LOC_REQUEST::readMessage(sock);
-      cout << res->name << endl;
-      cout << res->argTypes[0] << " " << res->argTypes[1] << " " << res->argTypes[2] << endl;
+    case REGISTER: {
+      struct SERVER_BINDER_REGISTER* res = SERVER_BINDER_REGISTER::readMessage(sock);
+      cerr << res->server_identifier << ' ' << res->port << endl;
+      cerr << res->name << ' ' << res->argTypes[0] << ' ' << res->argTypes[1] << ' ' << res->argTypes[2] << ' ' << res->argTypes[3] << endl;
       break;
+    }
+    case LOC_REQUEST: {
+      struct CLIENT_BINDER_LOC_REQUEST* res = CLIENT_BINDER_LOC_REQUEST::readMessage(sock);
+      cerr << res->name << endl;
+      cerr << res->argTypes[0] << " " << res->argTypes[1] << " " << res->argTypes[2] << endl;
+      break;
+    }
   }
 
 }

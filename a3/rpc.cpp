@@ -230,6 +230,8 @@ int rpcCacheCall(char* name, int* argTypes, void** args) {
 int rpcRegister(char* name, int* argTypes, skeleton f) {
   int len;
   int status;
+  cerr << name << ' ' << argTypes[0] << ' ' << argTypes[1] << ' ' << argTypes[2] << ' ' << argTypes[3] << endl;
+  cerr << argTypesLength(argTypes) << endl;
 
   // make an entry in local database
   struct PROCEDURE_SKELETON procedure;

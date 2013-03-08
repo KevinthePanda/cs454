@@ -56,6 +56,7 @@ struct SERVER_BINDER_REGISTER {
   char* name;
   int *argTypes;
 
+  static struct SERVER_BINDER_REGISTER* readMessage(int sock);
   int sendMessage(int sock);
 };
 
