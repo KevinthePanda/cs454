@@ -6,7 +6,7 @@ using namespace std;
 class RPCError: public exception
 {
   public:
-    RPCError(int code, char* msg);
+    RPCError(int code, string msg);
     virtual ~RPCError() throw();
     virtual const char* what() const throw();
 
