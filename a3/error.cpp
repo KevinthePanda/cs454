@@ -3,7 +3,7 @@
 #include "error.h"
 #include "common.h"
 
-RPCError::RPCError(int code, char* msg)
+RPCError::RPCError(int code, string msg)
   :myCode(code), myMsg(msg) {}
 
 RPCError::~RPCError() throw() {}

@@ -2,15 +2,24 @@
 #define CONSTANTS_H
 
 #include "rpc.h"
+#include <string>
 
 // return types
+// successful return
 #define RETURN_SUCCESS 0
-#define RETURN_WARNING 1
-#define RETURN_FAILURE -1
 #define REGISTER_SUCCESS 0
-#define REGISTER_FAILURE 1
-#define SEND_FAILURE -2
-#define RECEIVE_FAILURE -3
+#define SEND_SUCCESS 0
+
+// warnings
+#define RETURN_WARNING 1
+
+// errors
+#define RETURN_FAILURE -1
+#define REGISTER_FAILURE -2
+#define SEND_FAILURE -3
+#define RECEIVE_FAILURE -4
+#define FUNCTION_FAILURE -5
+#define NO_SERVER_FAILURE -6
 
 // Message Types
 #define MSG_REGISTER 0
@@ -29,7 +38,7 @@
 
 // Util Functions
 int argTypesLength(int* argTypes);
-void checkStatus(int status, char* msg = "");
+void checkStatus(int status, std::string msg = "");
 int getSizeFromArgTypes(int* argTypes);
 
 // Data Structs
