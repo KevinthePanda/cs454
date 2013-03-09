@@ -287,6 +287,30 @@ CLIENT_BINDER_LOC_SUCCESS::readMessage(int sock) {
 }
 
 int CLIENT_BINDER_LOC_SUCCESS::sendMessage(int sock) {
+  int status;
+
+  // send the msg type
+  int msg_type = MSG_LOC_SUCCESS;
+  status = send(sock, &msg_type, sizeof(msg_type), 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return RETURN_FAILURE;
+  }
+
+  // send the server identifier
+  status = send(sock, server_identifier, STR_LEN, 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return REGISTER_FAILURE;
+  }
+
+  // send the port
+  status = send(sock, &port, sizeof port, 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return REGISTER_FAILURE;
+  }
+
   return RETURN_SUCCESS;
 }
 
