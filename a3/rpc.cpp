@@ -28,7 +28,7 @@ int my_server_sock;
 vector<int> my_server_connections;
 vector<int> my_server_to_remove;
 
-vector<struct PROCEDURE_SKELETON> my_server_procedures;
+vector<struct PROC_SKELETON> my_server_procedures;
 
 // for client's use
 char* my_client_identifier;
@@ -236,7 +236,7 @@ int rpcRegister(char* name, int* argTypes, skeleton f) {
   cerr << argTypesLength(argTypes) << endl;
 
   // make an entry in local database
-  struct PROCEDURE_SKELETON procedure;
+  struct PROC_SKELETON procedure;
   // copy the function name so we own it
   len = strlen(name) + 1;
   procedure.name = new char[len];

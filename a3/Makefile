@@ -1,7 +1,7 @@
 CXX = g++										# compiler
 CXXFLAGS = -L. -Wall -g -lpthread
 
-OBJECTS1 = error.o common.o binder.o
+OBJECTS1 = error.o common.o binder.o rpcDatabase.o
 EXEC1 = binder
 
 OBJECTS2 = rpc.o common.o error.o

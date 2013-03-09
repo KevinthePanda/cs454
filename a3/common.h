@@ -33,13 +33,13 @@ void checkStatus(int status, char* msg = "");
 int getSizeFromArgTypes(int* argTypes);
 
 // Data Structs
-struct PROCEDURE_SKELETON {
+struct PROC_SKELETON {
   char* name;
   int* argTypes;
   skeleton f;
 }; // Used on server
 
-struct PROCEDURE_LOCATION {
+struct PROC_LOCATION {
   char* name;
   int* argTypes;
   char* server_identifier;
