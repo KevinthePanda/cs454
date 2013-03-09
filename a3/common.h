@@ -38,7 +38,7 @@
 
 // Util Functions
 int argTypesLength(int* argTypes);
-void checkStatus(int status, std::string msg = "");
+void checkStatus(int status, int errorCode, std::string msg = "");
 int getSizeFromArgTypes(int* argTypes);
 
 // Data Structs
