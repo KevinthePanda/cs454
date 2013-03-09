@@ -35,7 +35,7 @@ int getSizeFromArgTypes(int* argTypes) {
   int total = 0;
   int length = argTypesLength(argTypes);
   for (int i = 0; i < length; i++) {
-    switch ((argTypes[i] & (7 << 16)) >> 16) {
+    switch ((argTypes[i] & (15 << 16)) >> 16) {
       case ARG_CHAR:
         total += sizeof(char);
         break;
@@ -117,7 +117,7 @@ int SERVER_BINDER_REGISTER::sendMessage(int sock) {
   int len;
 
   // send the msg type
-  int msg_type = REGISTER;
+  int msg_type = MSG_REGISTER;
   status = send(sock, &msg_type, sizeof msg_type, 0);
   if (status < 0) {
     cerr << "ERROR: send failed" << endl;
@@ -217,7 +217,7 @@ int CLIENT_BINDER_LOC_REQUEST::sendMessage(int sock) {
   int len;
 
   // send the msg type
-  int msg_type = LOC_REQUEST;
+  int msg_type = MSG_LOC_REQUEST;
   status = send(sock, &msg_type, sizeof(msg_type), 0);
   if (status < 0) {
     cerr << "ERROR: send failed" << endl;
@@ -293,7 +293,43 @@ int CLIENT_BINDER_LOC_SUCCESS::sendMessage(int sock) {
 //===================================================
 // CLIENT_BINDER_LOC_FAILURE Member Functions
 //===================================================
+struct CLIENT_BINDER_LOC_FAILURE*
+CLIENT_BINDER_LOC_FAILURE::readMessage(int sock) {
+  int status;
+  struct CLIENT_BINDER_LOC_FAILURE* ret = new struct CLIENT_BINDER_LOC_FAILURE();
+
+  try {
+    // receive the failure code
+    status = recv(sock, &(ret->reasonCode), sizeof(ret->reasonCode), 0);
+    if (status < 0) {
+      checkStatus(RECEIVE_FAILURE, "reading CLIENT_BINDER_LOC_SUCCESS message");
+    }
+  } catch (RPCError& e) {
+    delete ret;
+    ret = NULL;
+  }
+
+  return ret;
+}
+
 int CLIENT_BINDER_LOC_FAILURE::sendMessage(int sock) {
+  int status;
+
+  // send the msg type
+  int msg_type = MSG_LOC_FAILURE;
+  status = send(sock, &msg_type, sizeof(msg_type), 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return RETURN_FAILURE;
+  }
+
+  // send the failure code
+  status = send(sock, &reasonCode, sizeof(reasonCode), 0);
+  if (status < 0) {
+    cerr << "ERROR: send failed" << endl;
+    return REGISTER_FAILURE;
+  }
+
   return RETURN_SUCCESS;
 }
 
@@ -355,7 +391,7 @@ int CLIENT_SERVER_EXECUTE::sendMessage(int sock) {
   int len;
 
   // send the msg type
-  int msg_type = EXECUTE_SUCCESS;
+  int msg_type = MSG_EXECUTE;
   status = send(sock, &msg_type, sizeof(msg_type), 0);
   if (status < 0) {
     cerr << "ERROR: send failed" << endl;
@@ -468,7 +504,7 @@ int CLIENT_SERVER_EXECUTE_SUCCESS::sendMessage(int sock) {
   int len;
 
   // send the msg type
-  int msg_type = EXECUTE_SUCCESS;
+  int msg_type = MSG_EXECUTE_SUCCESS;
   status = send(sock, &msg_type, sizeof(msg_type), 0);
   if (status < 0) {
     cerr << "ERROR: send failed" << endl;
@@ -548,7 +584,7 @@ int CLIENT_SERVER_EXECUTE_FAILURE::sendMessage(int sock) {
   int status;
 
   // send the msg type
-  int msg_type = EXECUTE_FAILURE;
+  int msg_type = MSG_EXECUTE_FAILURE;
   status = send(sock, &msg_type, sizeof(msg_type), 0);
   if (status < 0) {
     cerr << "ERROR: send failed" << endl;

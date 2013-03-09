@@ -13,14 +13,16 @@
 #define RECEIVE_FAILURE -3
 
 // Message Types
-#define REGISTER 0
-#define LOC_REQUEST 1
-#define LOC_SUCCESS 2
-#define LOC_FAILURE 3
-#define EXECUTE 4
-#define EXECUTE_SUCCESS 5
-#define EXECUTE_FAILURE 6
-#define TERMINATE 7
+#define MSG_REGISTER 0
+#define MSG_REGISTER_SUCCESS 1
+#define MSG_REGISTER_FAILURE 2
+#define MSG_LOC_REQUEST 3
+#define MSG_LOC_SUCCESS 4
+#define MSG_LOC_FAILURE 5
+#define MSG_EXECUTE 6
+#define MSG_EXECUTE_SUCCESS 7
+#define MSG_EXECUTE_FAILURE 8
+#define MSG_TERMINATE 9
 
 // Constants
 #define STR_LEN 256
@@ -61,6 +63,24 @@ struct SERVER_BINDER_REGISTER {
   int sendMessage(int sock);
 };
 
+// used with REGISTER_SUCCESS
+struct SERVER_BINDER_REGISTER_SUCCESS {
+  // 0 for no warning
+  int warningCode;
+
+  static struct SERVER_BINDER_REGISTER_SUCCESS* readMessage(int sock);
+  int sendMessage(int sock);
+};
+
+// used with REGISTER_FAILURE
+struct SERVER_BINDER_REGISTER_FAILURE {
+  // this code must be negative
+  int failureCode;
+
+  static struct SERVER_BINDER_REGISTER_SUCCESS* readMessage(int sock);
+  int sendMessage(int sock);
+};
+
 // used with LOC_REQUEST
 struct CLIENT_BINDER_LOC_REQUEST {
   char *name;
@@ -83,6 +103,7 @@ struct CLIENT_BINDER_LOC_SUCCESS {
 struct CLIENT_BINDER_LOC_FAILURE {
   int reasonCode;
 
+  static struct CLIENT_BINDER_LOC_FAILURE* readMessage(int sock);
   int sendMessage(int sock);
 };
 

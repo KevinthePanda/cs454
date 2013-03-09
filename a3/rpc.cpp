@@ -138,26 +138,27 @@ int rpcCall(char* name, int* argTypes, void** args) {
 
   // receive response to location request
   // message type
-  int msg_type = -1;
+  int msg_type;
   status = recv(my_binder_sock, &msg_type, sizeof msg_type, 0);
   if (status < 0) {
     cerr << "ERROR: receive failed" << endl;
     return RETURN_FAILURE;
   }
-  // location request failure
-  if (msg_type == LOC_FAILURE) {
-    // TODO get failure message
-    return RETURN_FAILURE;
-  }
-  if (msg_type != LOC_SUCCESS) {
-    return RETURN_FAILURE;
-  }
 
-  // location request success
-  // get the response
-  struct CLIENT_BINDER_LOC_SUCCESS* res =
-    CLIENT_BINDER_LOC_SUCCESS::readMessage(my_binder_sock);
-  if (res == NULL) {
+  struct CLIENT_BINDER_LOC_SUCCESS* res_success;
+  struct CLIENT_BINDER_LOC_FAILURE* res_failure;
+
+  // handle location request response message
+  if (msg_type == MSG_LOC_FAILURE) {
+    res_failure = CLIENT_BINDER_LOC_FAILURE::readMessage(my_binder_sock);
+    return RETURN_FAILURE;
+  } else if (msg_type == MSG_LOC_SUCCESS) {
+    res_success = CLIENT_BINDER_LOC_SUCCESS::readMessage(my_binder_sock);
+    if (res_success == NULL) {
+      return RETURN_FAILURE;
+    }
+  } else {
+    // bad message type?
     return RETURN_FAILURE;
   }
 
@@ -166,9 +167,9 @@ int rpcCall(char* name, int* argTypes, void** args) {
   int server_sock;
   struct sockaddr_in server_addr;
   struct hostent *server;
-  portno = res->port;
+  portno = res_success->port;
   server_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  server = gethostbyname(res->server_identifier);
+  server = gethostbyname(res_success->server_identifier);
 
   bzero((char *) &binder_addr, sizeof(binder_addr));
   binder_addr.sin_family = AF_INET;
@@ -197,25 +198,26 @@ int rpcCall(char* name, int* argTypes, void** args) {
     cerr << "ERROR: receive failed" << endl;
     return RETURN_FAILURE;
   }
-  // execute failure
-  if (msg_type == EXECUTE_FAILURE) {
-    // TODO get failure message
-    return RETURN_FAILURE;
-  }
-  if (msg_type != EXECUTE_SUCCESS) {
-    return RETURN_FAILURE;
-  }
 
-  // execute success
-  // get the response
-  struct CLIENT_SERVER_EXECUTE_SUCCESS* executeRes =
-    CLIENT_SERVER_EXECUTE_SUCCESS::readMessage(server_sock);
-  if (executeRes == NULL) {
+  struct CLIENT_SERVER_EXECUTE_SUCCESS* exec_success;
+  struct CLIENT_SERVER_EXECUTE_FAILURE* exec_failure;
+
+  // handle location request response message
+  if (msg_type == MSG_EXECUTE_FAILURE) {
+    exec_failure = CLIENT_SERVER_EXECUTE_FAILURE::readMessage(my_binder_sock);
+    return RETURN_FAILURE;
+  } else if (msg_type == MSG_EXECUTE_SUCCESS) {
+    exec_success = CLIENT_SERVER_EXECUTE_SUCCESS::readMessage(my_binder_sock);
+    if (exec_success == NULL) {
+      return RETURN_FAILURE;
+    }
+  } else {
+    // bad message type?
     return RETURN_FAILURE;
   }
 
   // set the returned args
-  args = executeRes->args;
+  args = exec_success->args;
 
   // close connection
   close(my_binder_sock);
@@ -315,7 +317,7 @@ int rpcExecute() {
             int status;
 
             // receive the message type
-            int msg_type = 0;
+            int msg_type;
             status = recv(connection, &msg_type, sizeof msg_type, 0);
 
             if (status < 0) {
@@ -329,7 +331,7 @@ int rpcExecute() {
             }
 
             switch (msg_type) {
-              case TERMINATE:
+              case MSG_TERMINATE:
                 return 0;
                 break;
             }
@@ -354,7 +356,7 @@ int rpcTerminate() {
   // Inform all of the servers
   // Wait for servers to terminate
   // Terminate binder
-  int msg_type = TERMINATE;
+  int msg_type = MSG_TERMINATE;
   send(my_binder_sock, &msg_type, sizeof(msg_type), 0);
   return 0;
 }

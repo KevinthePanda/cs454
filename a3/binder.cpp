@@ -143,23 +143,23 @@ void Binder::process_connection(int sock) {
   }
 
   switch (msg_type) {
-    case TERMINATE:
+    case MSG_TERMINATE:
       // check that the sender has the right address
       for (vector<int>::iterator it = myConnections.begin(); it != myConnections.end(); ++it) {
         int connection = *it;
-        msg_type = TERMINATE;
+        msg_type = MSG_TERMINATE;
         send(connection, &msg_type, sizeof(msg_type), 0);
       }
       close_connections();
       shutdown = true;
       break;
-    case REGISTER: {
+    case MSG_REGISTER: {
       struct SERVER_BINDER_REGISTER* res = SERVER_BINDER_REGISTER::readMessage(sock);
       cerr << res->server_identifier << ' ' << res->port << endl;
       cerr << res->name << ' ' << res->argTypes[0] << ' ' << res->argTypes[1] << ' ' << res->argTypes[2] << ' ' << res->argTypes[3] << endl;
       break;
     }
-    case LOC_REQUEST: {
+    case MSG_LOC_REQUEST: {
       struct CLIENT_BINDER_LOC_REQUEST* res = CLIENT_BINDER_LOC_REQUEST::readMessage(sock);
       cerr << res->name << endl;
       cerr << res->argTypes[0] << " " << res->argTypes[1] << " " << res->argTypes[2] << endl;
