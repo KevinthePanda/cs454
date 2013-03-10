@@ -112,7 +112,6 @@ void Binder::start() {
         }
       }
     }
-
   }
 
   // free the linked list
@@ -142,6 +141,7 @@ void Binder::process_connection(int sock) {
     cerr << "ERROR: receive failed" << endl;
     return;
   }
+
   if (status == 0) {
     // client has closed the connection
     myToRemove.push_back(sock);
@@ -150,6 +150,7 @@ void Binder::process_connection(int sock) {
 
   switch (msg_type) {
     case MSG_TERMINATE:
+      cerr << "received terminate" << endl;
       // check that the sender has the right address
       for (vector<int>::iterator it = myConnections.begin(); it != myConnections.end(); ++it) {
         int connection = *it;
@@ -184,11 +185,9 @@ void Binder::process_connection(int sock) {
       cerr << l << endl;
       cerr << loc.myPort << endl;
       int status = msg.sendMessage(sock);
-
       break;
     }
   }
-
 }
 
 int main() {

@@ -238,8 +238,6 @@ int rpcCacheCall(char* name, int* argTypes, void** args) {
 int rpcRegister(char* name, int* argTypes, skeleton f) {
   int len;
   int status;
-  //cerr << name << ' ' << argTypes[0] << ' ' << argTypes[1] << ' ' << argTypes[2] << ' ' << argTypes[3] << endl;
-  //cerr << argTypesLength(argTypes) << endl;
 
   // make an entry in local database
   struct PROC_SKELETON procedure;
@@ -297,7 +295,6 @@ int rpcExecute() {
     if (status == -1) {
       cerr << "ERROR: select failed." << endl;
     } else {
-      cerr << "in here" << endl;
       // one or both of the descriptors have data
       if (FD_ISSET(my_server_sock, &readfds)) {
         // ready to accept
@@ -312,14 +309,12 @@ int rpcExecute() {
 
         // add new connection
         my_server_connections.push_back(new_sock);
-        cerr << "in here 2" << endl;
 
       } else {
         // a connection is ready to send us stuff
         for (vector<int>::iterator it = my_server_connections.begin();
             it != my_server_connections.end(); ++it) {
           int connection = *it;
-          cerr << "in here 3" << endl;
           if (FD_ISSET(connection, &readfds)) {
             //process_server_message(connection);
 
@@ -328,7 +323,6 @@ int rpcExecute() {
             // receive the message type
             int msg_type;
             status = recv(connection, &msg_type, sizeof msg_type, 0);
-            cerr << msg_type << endl;
 
             if (status < 0) {
               cerr << "ERROR: receive failed" << endl;
@@ -345,16 +339,11 @@ int rpcExecute() {
                 return 0;
                 break;
               case MSG_EXECUTE:
-                cerr << "in here 4" << endl;
                 struct CLIENT_SERVER_EXECUTE* res = CLIENT_SERVER_EXECUTE::readMessage(connection);
-                cerr << res->name << endl;
-                cerr << res->argTypes[0] << " " << res->argTypes[1] << endl;
 
                 for (vector<struct PROC_SKELETON>::iterator p = my_server_procedures.begin(); p != my_server_procedures.end(); ++p) {
-                  cerr << "in here 5" << endl;
                   struct PROC_SKELETON proc = (*p);
                   if (strcmp(proc.name, res->name) == 0) {
-                    cerr << "in here 6" << endl;
                     bool match = true;
                     int len = argTypesLength(res->argTypes);
                     if (len != argTypesLength(proc.argTypes)) {
@@ -366,11 +355,10 @@ int rpcExecute() {
                         match = false;
                       }
                     }
-                    cerr << "in here 7" << endl;
 
                     if (match) {
                       cerr << "in here 8" << endl;
-                      //(*proc.f)(res->argTypes, res->args);
+                      //proc.f(res->argTypes, res->args);
                       cerr << "in here 9" << endl;
 
                       // send the server location to the client
