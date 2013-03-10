@@ -41,6 +41,11 @@ int argTypesLength(int* argTypes);
 void checkStatus(int status, int errorCode, std::string msg = "");
 int getSizeFromArgTypes(int* argTypes);
 
+void sendArgs(int* argTypes, void** args, int sock);
+void sendArg(int argType, void* arg, int sock);
+void** readArgs(int* argTypes, int sock);
+void* readArg(int argType, int sock);
+
 // Data Structs
 struct PROC_SKELETON {
   char* name;

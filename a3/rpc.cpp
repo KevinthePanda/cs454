@@ -358,7 +358,9 @@ int rpcExecute() {
 
                     if (match) {
                       cerr << "in here 8" << endl;
-                      //proc.f(res->argTypes, res->args);
+                      cerr << "proc: " << &proc << endl;
+                      cerr << "proc.f: " << proc.f << endl;
+                      proc.f(res->argTypes, res->args);
                       cerr << "in here 9" << endl;
 
                       // send the server location to the client

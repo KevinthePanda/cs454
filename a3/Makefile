@@ -22,6 +22,8 @@ EXECS = ${EXEC1} ${EXEC2}	${EXEC3} ${EXEC4}					# all executables
 all : ${EXECS}									# build all executables
 
 #############################################################
+server_function_skels.o: rpc.o
+	gcc -c -g -o server_function_skels.o server_function_skels.c
 
 ${EXEC1} : ${OBJECTS1}							# link step 1st executable
 	${CXX} ${CXXFLAGS} $^ -o $@

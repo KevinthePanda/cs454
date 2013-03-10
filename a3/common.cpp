@@ -61,6 +61,54 @@ int getSizeFromArgTypes(int* argTypes) {
   return total;
 }
 
+void sendArgs(int* argTypes, void** args, int sock) {
+  int length = argTypesLength(argTypes);
+  for (int i = 0; i < length; i++) {
+    int argType = (argTypes[i] & (15 << 16)) >> 16;
+    void* arg = args[i];
+    sendArg(argType, arg, sock);
+  }
+}
+
+void sendArg(int argType, void* arg, int sock) {
+  int size;
+  int status;
+  string errorMsg = "sending arg";
+
+  switch(argType) {
+    case ARG_CHAR:
+      size = sizeof(char);
+      break;
+    case ARG_SHORT:
+      size = sizeof(short);
+      break;
+    case ARG_INT:
+      size = sizeof(int);
+      break;
+    case ARG_LONG:
+      size = sizeof(long);
+      break;
+    case ARG_DOUBLE:
+      size = sizeof(double);
+      break;
+    case ARG_FLOAT:
+      size = sizeof(float);
+      break;
+  }
+
+  try {
+    // send the arg size
+    status = send(sock, &size, sizeof(size), 0);
+    checkStatus(status, SEND_FAILURE, errorMsg);
+
+    // send the arg
+    status = send(sock, arg, size, 0);
+    checkStatus(status, SEND_FAILURE, errorMsg);
+  } catch (RPCError& e) {
+    cerr << e.what() << endl;
+  }
+}
+
 //===================================================
 // SERVER_BINDER_REGISTER Member Functions
 //===================================================
