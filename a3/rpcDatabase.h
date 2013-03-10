@@ -39,8 +39,7 @@ class ServerProcList {
 
 class RpcDatabase {
   public:
-    //void add(ServerProcList& list);
-    void add(string server, int port, string functionName, int* argTypes);
+    int add(string server, int port, string functionName, int* argTypes);
     ServerLocation getProcLocation(string& name, int* argTypes);
 
   private:

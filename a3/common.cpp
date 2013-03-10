@@ -206,6 +206,86 @@ int SERVER_BINDER_REGISTER::sendMessage(int sock) {
 }
 
 //===================================================
+// SERVER_BINDER_REGISTER_SUCCESS Member Functions
+//===================================================
+struct SERVER_BINDER_REGISTER_SUCCESS* SERVER_BINDER_REGISTER_SUCCESS::readMessage(int sock) {
+  int status;
+  struct SERVER_BINDER_REGISTER_SUCCESS* ret = new struct SERVER_BINDER_REGISTER_SUCCESS();
+  string errorMsg = "reading SERVER_BINDER_REGISTER_SUCCESS message";
+
+  try {
+    // receive the warning code
+    status = recv(sock, &(ret->warningCode), sizeof(ret->warningCode), 0);
+    checkStatus(status, RECEIVE_FAILURE, errorMsg);
+  } catch (RPCError& e) {
+    delete ret;
+    ret = NULL;
+  }
+
+  return ret;
+}
+
+int SERVER_BINDER_REGISTER_SUCCESS::sendMessage(int sock) {
+  int status;
+  int msg_type = MSG_REGISTER_SUCCESS;
+  string errorMsg = "sending SERVER_BINDER_REGISTER_SUCCESS message";
+
+  try {
+    // send the msg type
+    status = send(sock, &msg_type, sizeof(msg_type), 0);
+    checkStatus(status, SEND_FAILURE, errorMsg);
+
+    // send the warning code
+    status = send(sock, &warningCode, sizeof(warningCode), 0);
+    checkStatus(status, SEND_FAILURE, errorMsg);
+  } catch (RPCError& e) {
+    return SEND_FAILURE;
+  }
+
+  return SEND_SUCCESS;
+}
+
+//===================================================
+// SERVER_BINDER_REGISTER_FAILURE Member Functions
+//===================================================
+struct SERVER_BINDER_REGISTER_FAILURE* SERVER_BINDER_REGISTER_FAILURE::readMessage(int sock) {
+  int status;
+  struct SERVER_BINDER_REGISTER_FAILURE* ret = new struct SERVER_BINDER_REGISTER_FAILURE();
+  string errorMsg = "reading SERVER_BINDER_REGISTER_FAILURE message";
+
+  try {
+    // receive the warning code
+    status = recv(sock, &(ret->failureCode), sizeof(ret->failureCode), 0);
+    checkStatus(status, RECEIVE_FAILURE, errorMsg);
+  } catch (RPCError& e) {
+    delete ret;
+    ret = NULL;
+  }
+
+  return ret;
+}
+
+int SERVER_BINDER_REGISTER_FAILURE::sendMessage(int sock) {
+  int status;
+  int msg_type = MSG_REGISTER_FAILURE;
+  string errorMsg = "sending SERVER_BINDER_REGISTER_FAILURE message";
+
+  try {
+    // send the msg type
+    status = send(sock, &msg_type, sizeof(msg_type), 0);
+    checkStatus(status, SEND_FAILURE, errorMsg);
+
+    // send the warning code
+    status = send(sock, &failureCode, sizeof(failureCode), 0);
+    checkStatus(status, SEND_FAILURE, errorMsg);
+  } catch (RPCError& e) {
+    return SEND_FAILURE;
+  }
+
+  return SEND_SUCCESS;
+}
+
+//===================================================
 // CLIENT_BINDER_LOC_REQUEST Member Functions
 //===================================================
 struct CLIENT_BINDER_LOC_REQUEST* CLIENT_BINDER_LOC_REQUEST::readMessage(int sock) {

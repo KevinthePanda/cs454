@@ -59,12 +59,17 @@ void ServerProcList::add(string& name, int* argTypes) {
 //------------------------------------------------------
 // RpcDatabase
 //------------------------------------------------------
-void RpcDatabase::add(string server, int port, string functionName, int* argTypes) {
+int RpcDatabase::add(string server, int port, string functionName, int* argTypes) {
   // search for a server
   for (unsigned int i = 0; i < myServers.size(); i++) {
     if (myServers[i].myLocation.isMatchingLocation(server, port)) {
+      for (unsigned int j = 0; j < myServers[i].myProcs.size(); j++) {
+        if (myServers[i].myProcs[j].isSameSignature(functionName, argTypes)) {
+          return -1;
+        }
+      }
       myServers[i].add(functionName, argTypes);
-      return;
+      return 0;
     }
   }
 
@@ -72,6 +77,7 @@ void RpcDatabase::add(string server, int port, string functionName, int* argType
   ServerProcList procList(server, port);
   procList.add(functionName, argTypes);
   myServers.push_back(procList);
+  return 0;
 }
 
 ServerLocation RpcDatabase::getProcLocation(string& name, int* argTypes) {

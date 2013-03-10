@@ -21,6 +21,7 @@
 #define FUNCTION_FAILURE -5
 #define NO_SERVER_FAILURE -6
 #define NO_MATCHING_SIGNATURE -7
+#define SIGNATURE_ALREADY_EXISTS -8
 
 // Message Types
 #define MSG_REGISTER 0
@@ -92,7 +93,7 @@ struct SERVER_BINDER_REGISTER_FAILURE {
   // this code must be negative
   int failureCode;
 
-  static struct SERVER_BINDER_REGISTER_SUCCESS* readMessage(int sock);
+  static struct SERVER_BINDER_REGISTER_FAILURE* readMessage(int sock);
   int sendMessage(int sock);
 };
 

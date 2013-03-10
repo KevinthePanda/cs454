@@ -164,7 +164,18 @@ void Binder::process_connection(int sock) {
       break;
     case MSG_REGISTER: {
       struct SERVER_BINDER_REGISTER* res = SERVER_BINDER_REGISTER::readMessage(sock);
-      rpcDatabase->add(res->server_identifier, res->port, res->name, res->argTypes);
+      int reg = rpcDatabase->add(res->server_identifier, res->port, res->name, res->argTypes);
+      // successful registration
+      if (reg == 0) {
+        struct SERVER_BINDER_REGISTER_SUCCESS msg;
+        msg.warningCode = REGISTER_SUCCESS; // come up with warnings if necessary
+        status = msg.sendMessage(sock);
+      } else {
+        // failed registration
+        struct SERVER_BINDER_REGISTER_FAILURE msg;
+        msg.failureCode = SIGNATURE_ALREADY_EXISTS;
+        status = msg.sendMessage(sock);
+      }
       break;
     }
     case MSG_LOC_REQUEST: {

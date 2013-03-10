@@ -262,6 +262,18 @@ int rpcRegister(char* name, int* argTypes, skeleton f) {
     return status;
   }
 
+  int msg_type;
+  status = recv(my_binder_sock, &msg_type, sizeof msg_type, 0);
+  if (msg_type == MSG_REGISTER_SUCCESS) {
+    struct SERVER_BINDER_REGISTER_SUCCESS* res;
+    res = SERVER_BINDER_REGISTER_SUCCESS::readMessage(my_binder_sock);
+    return res->warningCode;
+  } else if (msg_type == MSG_REGISTER_FAILURE) {
+    struct SERVER_BINDER_REGISTER_FAILURE* res;
+    res = SERVER_BINDER_REGISTER_FAILURE::readMessage(my_binder_sock);
+    return res->failureCode;
+  }
+
   return REGISTER_SUCCESS;
 }
 
