@@ -83,6 +83,7 @@ int rpcInit() {
   status = bind(my_server_sock, servinfo->ai_addr, servinfo->ai_addrlen);
 
   status = listen(my_server_sock, 5);
+
   // get server identifier
   my_server_identifier = new char[STR_LEN];
   gethostname(my_server_identifier, STR_LEN);
@@ -153,9 +154,7 @@ int rpcCall(char* name, int* argTypes, void** args) {
     res_failure = CLIENT_BINDER_LOC_FAILURE::readMessage(my_binder_sock);
     return RETURN_FAILURE;
   } else if (msg_type == MSG_LOC_SUCCESS) {
-    cerr << "reading message" << endl;
     res_success = CLIENT_BINDER_LOC_SUCCESS::readMessage(my_binder_sock);
-    cerr << "read message" << endl;
     cerr << res_success->server_identifier << endl;
     cerr << res_success->port << endl;
     if (res_success == NULL) {
@@ -173,7 +172,6 @@ int rpcCall(char* name, int* argTypes, void** args) {
   struct hostent *server;
   portno = res_success->port;
   server_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  cerr << "made it here" << endl;
   server = gethostbyname(res_success->server_identifier);
 
   bzero((char *) &binder_addr, sizeof(binder_addr));
@@ -199,7 +197,7 @@ int rpcCall(char* name, int* argTypes, void** args) {
   // receive response to execute message
   // message type
   msg_type = -1;
-  status = recv(my_binder_sock, &msg_type, sizeof msg_type, 0);
+  status = recv(server_sock, &msg_type, sizeof msg_type, 0);
   if (status < 0) {
     cerr << "ERROR: receive failed" << endl;
     return RETURN_FAILURE;
@@ -210,10 +208,12 @@ int rpcCall(char* name, int* argTypes, void** args) {
 
   // handle location request response message
   if (msg_type == MSG_EXECUTE_FAILURE) {
-    exec_failure = CLIENT_SERVER_EXECUTE_FAILURE::readMessage(my_binder_sock);
+    exec_failure = CLIENT_SERVER_EXECUTE_FAILURE::readMessage(server_sock);
     return RETURN_FAILURE;
   } else if (msg_type == MSG_EXECUTE_SUCCESS) {
-    exec_success = CLIENT_SERVER_EXECUTE_SUCCESS::readMessage(my_binder_sock);
+    cerr << "exec success" << endl;
+    exec_success = CLIENT_SERVER_EXECUTE_SUCCESS::readMessage(server_sock);
+    cerr << "exec success done reading" << endl;
     if (exec_success == NULL) {
       return RETURN_FAILURE;
     }
@@ -297,6 +297,7 @@ int rpcExecute() {
     if (status == -1) {
       cerr << "ERROR: select failed." << endl;
     } else {
+      cerr << "in here" << endl;
       // one or both of the descriptors have data
       if (FD_ISSET(my_server_sock, &readfds)) {
         // ready to accept
@@ -310,13 +311,15 @@ int rpcExecute() {
         }
 
         // add new connection
-        my_server_connections.push_back(my_server_sock);
+        my_server_connections.push_back(new_sock);
+        cerr << "in here 2" << endl;
 
       } else {
         // a connection is ready to send us stuff
         for (vector<int>::iterator it = my_server_connections.begin();
             it != my_server_connections.end(); ++it) {
           int connection = *it;
+          cerr << "in here 3" << endl;
           if (FD_ISSET(connection, &readfds)) {
             //process_server_message(connection);
 
@@ -325,20 +328,61 @@ int rpcExecute() {
             // receive the message type
             int msg_type;
             status = recv(connection, &msg_type, sizeof msg_type, 0);
+            cerr << msg_type << endl;
 
             if (status < 0) {
               cerr << "ERROR: receive failed" << endl;
-              return -1;
+              //return -1;
             }
             if (status == 0) {
               // client has closed the connection
               my_server_to_remove.push_back(connection);
-              return -1;
+              //return -1;
             }
 
             switch (msg_type) {
               case MSG_TERMINATE:
                 return 0;
+                break;
+              case MSG_EXECUTE:
+                cerr << "in here 4" << endl;
+                struct CLIENT_SERVER_EXECUTE* res = CLIENT_SERVER_EXECUTE::readMessage(connection);
+                cerr << res->name << endl;
+                cerr << res->argTypes[0] << " " << res->argTypes[1] << endl;
+
+                for (vector<struct PROC_SKELETON>::iterator p = my_server_procedures.begin(); p != my_server_procedures.end(); ++p) {
+                  cerr << "in here 5" << endl;
+                  struct PROC_SKELETON proc = (*p);
+                  if (strcmp(proc.name, res->name) == 0) {
+                    cerr << "in here 6" << endl;
+                    bool match = true;
+                    int len = argTypesLength(res->argTypes);
+                    if (len != argTypesLength(proc.argTypes)) {
+                      match = false;
+                    }
+
+                    for (int i = 0; i < len; i++) {
+                      if (res->argTypes[i] != proc.argTypes[i]) {
+                        match = false;
+                      }
+                    }
+                    cerr << "in here 7" << endl;
+
+                    if (match) {
+                      cerr << "in here 8" << endl;
+                      //(*proc.f)(res->argTypes, res->args);
+                      cerr << "in here 9" << endl;
+
+                      // send the server location to the client
+                      struct CLIENT_SERVER_EXECUTE_SUCCESS msg;
+                      msg.name = res->name;
+                      msg.argTypes = res->argTypes;
+                      msg.args = res->args;
+                      msg.sendMessage(connection);
+                      break;
+                    }
+                  }
+                }
                 break;
             }
           }

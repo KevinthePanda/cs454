@@ -138,7 +138,6 @@ void Binder::process_connection(int sock) {
   // receive the buffer length
   int msg_type = 0;
   status = recv(sock, &msg_type, sizeof msg_type, 0);
-  cerr << "msg type: " << msg_type << endl;
   if (status < 0) {
     cerr << "ERROR: receive failed" << endl;
     return;
@@ -173,20 +172,17 @@ void Binder::process_connection(int sock) {
       cerr << res->argTypes[0] << " " << res->argTypes[1] << " " << res->argTypes[2] << endl;
       string serverName = res->name;
       ServerLocation loc = rpcDatabase->getProcLocation(serverName, res->argTypes);
-      cerr << loc.myServerId << endl;
-      cerr << loc.myPort << endl;
+      //cerr << loc.myServerId << endl;
+      //cerr << loc.myPort << endl;
 
       // send the server location to the client
       struct CLIENT_BINDER_LOC_SUCCESS msg;
-      // TODO FIX THIS SHIT
-      //char *p = const_cast<char *>(loc.myServerId.c_str());
-      //msg.server_identifier = p;
-      //char[] blah = {'l','i','n','u','x','0','3','2','.','s','t','u','d','e','n','t','.','c','s','\0'};
-      char *blah = "linux032.student.cs";
-      char* l = new char[STR_LEN];
+      char *l = new char[STR_LEN];
       strcpy(l, loc.myServerId.c_str());
       msg.server_identifier = l;
       msg.port = loc.myPort;
+      cerr << l << endl;
+      cerr << loc.myPort << endl;
       int status = msg.sendMessage(sock);
 
       break;
