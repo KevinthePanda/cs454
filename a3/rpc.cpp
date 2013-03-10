@@ -360,7 +360,9 @@ int rpcExecute() {
                       cerr << "in here 8" << endl;
                       cerr << "proc: " << &proc << endl;
                       cerr << "proc.f: " << proc.f << endl;
+                      cerr << "zero arg: " << *((int *)(res->args[0])) << endl;
                       proc.f(res->argTypes, res->args);
+                      cerr << "zero arg: " << *((int *)(res->args[0])) << endl;
                       cerr << "in here 9" << endl;
 
                       // send the server location to the client

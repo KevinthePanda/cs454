@@ -62,7 +62,7 @@ int getSizeFromArgTypes(int* argTypes) {
 }
 
 void sendArgs(int* argTypes, void** args, int sock) {
-  int length = argTypesLength(argTypes);
+  int length = argTypesLength(argTypes) - 1;
   for (int i = 0; i < length; i++) {
     int argType = (argTypes[i] & (15 << 16)) >> 16;
     void* arg = args[i];
@@ -75,7 +75,7 @@ void sendArg(int argType, void* arg, int sock) {
   int status;
   string errorMsg = "sending arg";
 
-  switch(argType) {
+  switch (argType) {
     case ARG_CHAR:
       size = sizeof(char);
       break;
@@ -107,6 +107,59 @@ void sendArg(int argType, void* arg, int sock) {
   } catch (RPCError& e) {
     cerr << e.what() << endl;
   }
+}
+
+void** readArgs(int* argTypes, int sock) {
+  int size = getSizeFromArgTypes(argTypes);
+  int length = argTypesLength(argTypes) - 1;
+  void** args = (void **)malloc(length * sizeof(void *));
+  for (int i = 0; i < length; i++) {
+    int argType = (argTypes[i] & (15 << 16)) >> 16;
+    void* arg = readArg(argType, sock);
+    args[i] = arg;
+  }
+  return args;
+}
+
+void* readArg(int argType, int sock) {
+  int size;
+  int status;
+  string errorMsg = "receiving arg";
+
+  switch (argType) {
+    case ARG_CHAR:
+      size = sizeof(char);
+      break;
+    case ARG_SHORT:
+      size = sizeof(short);
+      break;
+    case ARG_INT:
+      size = sizeof(int);
+      break;
+    case ARG_LONG:
+      size = sizeof(long);
+      break;
+    case ARG_DOUBLE:
+      size = sizeof(double);
+      break;
+    case ARG_FLOAT:
+      size = sizeof(float);
+      break;
+  }
+  void* arg = (void *)malloc(size);
+
+  try {
+    // read the arg size
+    status = recv(sock, &size, sizeof(size), 0);
+    checkStatus(status, RECEIVE_FAILURE, errorMsg);
+
+    // read the arg
+    status = recv(sock, arg, size, 0);
+    checkStatus(status, RECEIVE_FAILURE, errorMsg);
+  } catch (RPCError& e) {
+    cerr << e.what() << endl;
+  }
+  return arg;
 }
 
 //===================================================
@@ -376,6 +429,8 @@ CLIENT_SERVER_EXECUTE::readMessage(int sock) {
     ret->argTypes = new int[len];
     status = recv(sock, ret->argTypes, len * sizeof(int), 0);
     checkStatus(status, RECEIVE_FAILURE, errorMsg);
+    ret->args = readArgs(ret->argTypes, sock);
+    /*
     ret->args = (void **)malloc(len * sizeof(void *));
 
     // receive the function args
@@ -384,6 +439,7 @@ CLIENT_SERVER_EXECUTE::readMessage(int sock) {
 
     status = recv(sock, ret->args, len, 0);
     checkStatus(status, RECEIVE_FAILURE, errorMsg);
+    */
   } catch (RPCError& e) {
     delete ret;
     ret = NULL;
@@ -421,6 +477,8 @@ int CLIENT_SERVER_EXECUTE::sendMessage(int sock) {
     checkStatus(status, SEND_FAILURE, errorMsg);
 
     // send the args length
+    sendArgs(argTypes, args, sock);
+    /*
     len = getSizeFromArgTypes(argTypes);
     status = send(sock, &len, sizeof(len), 0);
     checkStatus(status, SEND_FAILURE, errorMsg);
@@ -428,6 +486,7 @@ int CLIENT_SERVER_EXECUTE::sendMessage(int sock) {
     // send the args
     status = send(sock, args, len, 0);
     checkStatus(status, SEND_FAILURE, errorMsg);
+    */
   } catch (RPCError& e) {
     return SEND_FAILURE;
   }
@@ -460,6 +519,9 @@ struct CLIENT_SERVER_EXECUTE_SUCCESS* CLIENT_SERVER_EXECUTE_SUCCESS::readMessage
     ret->argTypes = new int[len];
     status = recv(sock, ret->argTypes, len * sizeof(int), 0);
     checkStatus(status, RECEIVE_FAILURE, errorMsg);
+    ret->args = readArgs(ret->argTypes, sock);
+
+    /*
     ret->args = (void **)malloc(len * sizeof(void *));
 
     // receive the function args
@@ -468,6 +530,7 @@ struct CLIENT_SERVER_EXECUTE_SUCCESS* CLIENT_SERVER_EXECUTE_SUCCESS::readMessage
 
     status = recv(sock, ret->args, len, 0);
     checkStatus(status, RECEIVE_FAILURE, errorMsg);
+    */
   } catch (RPCError& e) {
     delete ret;
     ret = NULL;
@@ -505,6 +568,8 @@ int CLIENT_SERVER_EXECUTE_SUCCESS::sendMessage(int sock) {
     checkStatus(status, SEND_FAILURE, errorMsg);
 
     // send the args length
+    sendArgs(argTypes, args, sock);
+    /*
     len = getSizeFromArgTypes(argTypes);
     status = send(sock, &len, sizeof(len), 0);
     checkStatus(status, SEND_FAILURE, errorMsg);
@@ -512,6 +577,7 @@ int CLIENT_SERVER_EXECUTE_SUCCESS::sendMessage(int sock) {
     // send the args
     status = send(sock, args, len, 0);
     checkStatus(status, SEND_FAILURE, errorMsg);
+    */
   } catch (RPCError& e) {
     return SEND_FAILURE;
   }
