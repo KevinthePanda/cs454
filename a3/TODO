@@ -1,7 +1,7 @@
 . rpcTerminate
-. threading rpcExecute
 . clean up binder when server disconnect
 . NOT SURE IF NEEDED : differentiate function signatures for scalars and arrays in database
-. more error codes
 . disconnection codes needs looking into
 . error handling
+. memory handling and freeing
+. more error codes - MAYBE DONE

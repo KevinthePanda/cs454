@@ -27,8 +27,37 @@ int my_server_port;
 int my_server_sock;
 vector<int> my_server_connections;
 vector<int> my_server_to_remove;
-
 vector<struct PROC_SKELETON> my_server_procedures;
+
+// server's function execution thread
+struct thread_data {
+  int sock;
+  char *name;
+  int *argTypes;
+  void** args;
+  skeleton f;
+};
+
+void *ServerExecute(void *threadarg) {
+  struct thread_data *data;
+  data = (struct thread_data *) threadarg;
+
+  int function_res = data->f(data->argTypes, data->args);
+  if (function_res == 0) {
+    // send the server location to the client
+    struct CLIENT_SERVER_EXECUTE_SUCCESS msg;
+    msg.name = data->name;
+    msg.argTypes = data->argTypes;
+    msg.args = data->args;
+    msg.sendMessage(data->sock);
+  } else {
+    struct CLIENT_SERVER_EXECUTE_FAILURE msg;
+    msg.reasonCode = FUNCTION_FAILURE;
+    msg.sendMessage(data->sock);
+  }
+
+  pthread_exit(NULL);
+}
 
 // for client's use
 char* my_client_identifier;
@@ -367,21 +396,15 @@ int rpcExecute() {
                     }
 
                     if (match) {
-                      int function_res = proc.f(res->argTypes, res->args);
+                      struct thread_data td;
+                      td.sock = connection;
+                      td.name = res->name;
+                      td.argTypes = res->argTypes;
+                      td.args = res->args;
+                      td.f = proc.f;
 
-                      // function ran properly
-                      if (function_res == 0) {
-                        // send the server location to the client
-                        struct CLIENT_SERVER_EXECUTE_SUCCESS msg;
-                        msg.name = res->name;
-                        msg.argTypes = res->argTypes;
-                        msg.args = res->args;
-                        msg.sendMessage(connection);
-                      } else {
-                        struct CLIENT_SERVER_EXECUTE_FAILURE msg;
-                        msg.reasonCode = FUNCTION_FAILURE;
-                        msg.sendMessage(connection);
-                      }
+                      pthread_t thread;
+                      pthread_create(&thread, NULL, ServerExecute, (void *)&td);
                       break;
                     }
                   }
