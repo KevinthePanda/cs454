@@ -22,6 +22,9 @@ EXECS = ${EXEC1} ${EXEC2}	${EXEC3} ${EXEC4}					# all executables
 all : ${EXECS}									# build all executables
 
 #############################################################
+client.o: rpc.o
+	gcc -c -g -o client.o client.c
+
 server_function_skels.o: rpc.o
 	gcc -c -g -o server_function_skels.o server_function_skels.c
 

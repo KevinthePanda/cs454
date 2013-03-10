@@ -100,7 +100,9 @@ int main() {
   args4[0] = (void *)a4;
 
   /* rpcCalls */
+  printf("--------------before: %d\n", *((int *)(args0[0])));
   int s0 = rpcCall("f0", argTypes0, args0);
+  printf("--------------after: %d\n", *((int *)(args0[0])));
   /* test the return f0 */
   printf("\nEXPECTED return of f0 is: %d\n", a0 + b0);
   if (s0 >= 0) {

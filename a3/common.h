@@ -39,10 +39,10 @@
 // Util Functions
 int argTypesLength(int* argTypes);
 void checkStatus(int status, int errorCode, std::string msg = "");
-int getSizeFromArgTypes(int* argTypes);
+//int getSizeFromArgTypes(int* argTypes);
 
 void sendArgs(int* argTypes, void** args, int sock);
-void sendArg(int argType, void* arg, int sock);
+void sendArg(int argType, int length, void* arg, int sock);
 void** readArgs(int* argTypes, int sock);
 void* readArg(int argType, int sock);
 

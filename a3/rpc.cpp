@@ -223,7 +223,10 @@ int rpcCall(char* name, int* argTypes, void** args) {
   }
 
   // set the returned args
-  args = exec_success->args;
+  int length = argTypesLength(exec_success->argTypes) - 1;
+  for (int i=0; i<length; i++) {
+    args[i] = exec_success->args[i];
+  }
 
   // close connection
   close(my_binder_sock);

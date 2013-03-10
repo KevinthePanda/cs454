@@ -33,47 +33,51 @@ void checkStatus(int status, int errorCode, string msg) {
   }
 }
 
-int getSizeFromArgTypes(int* argTypes) {
-  int total = 0;
-  int length = argTypesLength(argTypes);
-  for (int i = 0; i < length; i++) {
-    switch ((argTypes[i] & (15 << 16)) >> 16) {
-      case ARG_CHAR:
-        total += sizeof(char);
-        break;
-      case ARG_SHORT:
-        total += sizeof(short);
-        break;
-      case ARG_INT:
-        total += sizeof(int);
-        break;
-      case ARG_LONG:
-        total += sizeof(long);
-        break;
-      case ARG_DOUBLE:
-        total += sizeof(double);
-        break;
-      case ARG_FLOAT:
-        total += sizeof(float);
-        break;
-    }
-  }
-  return total;
-}
+//int getSizeFromArgTypes(int* argTypes) {
+  //int total = 0;
+  //int length = argTypesLength(argTypes);
+  //for (int i = 0; i < length; i++) {
+    //switch ((argTypes[i] & (15 << 16)) >> 16) {
+      //case ARG_CHAR:
+        //total += sizeof(char);
+        //break;
+      //case ARG_SHORT:
+        //total += sizeof(short);
+        //break;
+      //case ARG_INT:
+        //total += sizeof(int);
+        //break;
+      //case ARG_LONG:
+        //total += sizeof(long);
+        //break;
+      //case ARG_DOUBLE:
+        //total += sizeof(double);
+        //break;
+      //case ARG_FLOAT:
+        //total += sizeof(float);
+        //break;
+    //}
+  //}
+  //return total;
+//}
 
 void sendArgs(int* argTypes, void** args, int sock) {
   int length = argTypesLength(argTypes) - 1;
   for (int i = 0; i < length; i++) {
     int argType = (argTypes[i] & (15 << 16)) >> 16;
+    int argLength = (argTypes[i] & ((1 << 16) - 1));
     void* arg = args[i];
-    sendArg(argType, arg, sock);
+    sendArg(argType, argLength, arg, sock);
   }
 }
 
-void sendArg(int argType, void* arg, int sock) {
+void sendArg(int argType, int length, void* arg, int sock) {
   int size;
   int status;
   string errorMsg = "sending arg";
+
+  if (length == 0)
+    length = 1;
 
   switch (argType) {
     case ARG_CHAR:
@@ -95,6 +99,8 @@ void sendArg(int argType, void* arg, int sock) {
       size = sizeof(float);
       break;
   }
+
+  size = size*length;
 
   try {
     // send the arg size
@@ -110,9 +116,9 @@ void sendArg(int argType, void* arg, int sock) {
 }
 
 void** readArgs(int* argTypes, int sock) {
-  int size = getSizeFromArgTypes(argTypes);
   int length = argTypesLength(argTypes) - 1;
-  void** args = (void **)malloc(length * sizeof(void *));
+  //void** args = (void **)malloc(length * sizeof(void *));
+  void** args = new void*[length];
   for (int i = 0; i < length; i++) {
     int argType = (argTypes[i] & (15 << 16)) >> 16;
     void* arg = readArg(argType, sock);
@@ -126,40 +132,21 @@ void* readArg(int argType, int sock) {
   int status;
   string errorMsg = "receiving arg";
 
-  switch (argType) {
-    case ARG_CHAR:
-      size = sizeof(char);
-      break;
-    case ARG_SHORT:
-      size = sizeof(short);
-      break;
-    case ARG_INT:
-      size = sizeof(int);
-      break;
-    case ARG_LONG:
-      size = sizeof(long);
-      break;
-    case ARG_DOUBLE:
-      size = sizeof(double);
-      break;
-    case ARG_FLOAT:
-      size = sizeof(float);
-      break;
-  }
-  void* arg = (void *)malloc(size);
-
   try {
     // read the arg size
     status = recv(sock, &size, sizeof(size), 0);
     checkStatus(status, RECEIVE_FAILURE, errorMsg);
 
+    void* arg = (void *)malloc(size);
     // read the arg
     status = recv(sock, arg, size, 0);
     checkStatus(status, RECEIVE_FAILURE, errorMsg);
+
+    return arg;
   } catch (RPCError& e) {
     cerr << e.what() << endl;
   }
-  return arg;
+  return NULL;
 }
 
 //===================================================
@@ -521,6 +508,8 @@ struct CLIENT_SERVER_EXECUTE_SUCCESS* CLIENT_SERVER_EXECUTE_SUCCESS::readMessage
     checkStatus(status, RECEIVE_FAILURE, errorMsg);
     ret->args = readArgs(ret->argTypes, sock);
 
+    cerr << "zero arg readMessage: " << *(int*)ret->args[0] << endl;
+
     /*
     ret->args = (void **)malloc(len * sizeof(void *));
 
@@ -568,6 +557,7 @@ int CLIENT_SERVER_EXECUTE_SUCCESS::sendMessage(int sock) {
     checkStatus(status, SEND_FAILURE, errorMsg);
 
     // send the args length
+    cerr << "zero arg sendMessage: " << *((int *)(args[0])) << endl;
     sendArgs(argTypes, args, sock);
     /*
     len = getSizeFromArgTypes(argTypes);
