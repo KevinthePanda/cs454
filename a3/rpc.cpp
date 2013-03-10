@@ -155,8 +155,6 @@ int rpcCall(char* name, int* argTypes, void** args) {
     return RETURN_FAILURE;
   } else if (msg_type == MSG_LOC_SUCCESS) {
     res_success = CLIENT_BINDER_LOC_SUCCESS::readMessage(my_binder_sock);
-    cerr << res_success->server_identifier << endl;
-    cerr << res_success->port << endl;
     if (res_success == NULL) {
       return RETURN_FAILURE;
     }
@@ -168,7 +166,6 @@ int rpcCall(char* name, int* argTypes, void** args) {
   // make connection to server
   // TODO refactor this block?
   int server_sock;
-  struct sockaddr_in server_addr;
   struct hostent *server;
   portno = res_success->port;
   server_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -180,7 +177,6 @@ int rpcCall(char* name, int* argTypes, void** args) {
         (char *)&binder_addr.sin_addr.s_addr,
         server->h_length);
   binder_addr.sin_port = htons(portno);
-
 
   connect(server_sock,(struct sockaddr *)&binder_addr, sizeof(binder_addr));
 
@@ -209,11 +205,9 @@ int rpcCall(char* name, int* argTypes, void** args) {
   // handle location request response message
   if (msg_type == MSG_EXECUTE_FAILURE) {
     exec_failure = CLIENT_SERVER_EXECUTE_FAILURE::readMessage(server_sock);
-    return RETURN_FAILURE;
+    return exec_failure->reasonCode;
   } else if (msg_type == MSG_EXECUTE_SUCCESS) {
-    cerr << "exec success" << endl;
     exec_success = CLIENT_SERVER_EXECUTE_SUCCESS::readMessage(server_sock);
-    cerr << "exec success done reading" << endl;
     if (exec_success == NULL) {
       return RETURN_FAILURE;
     }
@@ -339,6 +333,7 @@ int rpcExecute() {
 
             switch (msg_type) {
               case MSG_TERMINATE:
+                cerr << "server received terminate" << endl;
                 return 0;
                 break;
               case MSG_EXECUTE:
@@ -360,20 +355,21 @@ int rpcExecute() {
                     }
 
                     if (match) {
-                      cerr << "in here 8" << endl;
-                      cerr << "proc: " << &proc << endl;
-                      cerr << "proc.f: " << proc.f << endl;
-                      cerr << "zero arg: " << *((int *)(res->args[0])) << endl;
-                      proc.f(res->argTypes, res->args);
-                      cerr << "zero arg: " << *((int *)(res->args[0])) << endl;
-                      cerr << "in here 9" << endl;
+                      int function_res = proc.f(res->argTypes, res->args);
 
-                      // send the server location to the client
-                      struct CLIENT_SERVER_EXECUTE_SUCCESS msg;
-                      msg.name = res->name;
-                      msg.argTypes = res->argTypes;
-                      msg.args = res->args;
-                      msg.sendMessage(connection);
+                      // function ran properly
+                      if (function_res == 0) {
+                        // send the server location to the client
+                        struct CLIENT_SERVER_EXECUTE_SUCCESS msg;
+                        msg.name = res->name;
+                        msg.argTypes = res->argTypes;
+                        msg.args = res->args;
+                        msg.sendMessage(connection);
+                      } else {
+                        struct CLIENT_SERVER_EXECUTE_FAILURE msg;
+                        msg.reasonCode = FUNCTION_FAILURE;
+                        msg.sendMessage(connection);
+                      }
                       break;
                     }
                   }

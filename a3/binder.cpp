@@ -154,37 +154,38 @@ void Binder::process_connection(int sock) {
       // check that the sender has the right address
       for (vector<int>::iterator it = myConnections.begin(); it != myConnections.end(); ++it) {
         int connection = *it;
+        cerr << "connection: " << connection << endl;
         msg_type = MSG_TERMINATE;
         send(connection, &msg_type, sizeof(msg_type), 0);
+        //myToRemove.push_back(connection);
       }
       close_connections();
       shutdown = true;
       break;
     case MSG_REGISTER: {
       struct SERVER_BINDER_REGISTER* res = SERVER_BINDER_REGISTER::readMessage(sock);
-      cerr << res->server_identifier << ' ' << res->port << endl;
-      cerr << res->name << ' ' << res->argTypes[0] << ' ' << res->argTypes[1] << ' ' << res->argTypes[2] << ' ' << res->argTypes[3] << endl;
       rpcDatabase->add(res->server_identifier, res->port, res->name, res->argTypes);
       break;
     }
     case MSG_LOC_REQUEST: {
       struct CLIENT_BINDER_LOC_REQUEST* res = CLIENT_BINDER_LOC_REQUEST::readMessage(sock);
-      cerr << res->name << endl;
-      cerr << res->argTypes[0] << " " << res->argTypes[1] << " " << res->argTypes[2] << endl;
       string serverName = res->name;
       ServerLocation loc = rpcDatabase->getProcLocation(serverName, res->argTypes);
-      //cerr << loc.myServerId << endl;
-      //cerr << loc.myPort << endl;
 
-      // send the server location to the client
-      struct CLIENT_BINDER_LOC_SUCCESS msg;
-      char *l = new char[STR_LEN];
-      strcpy(l, loc.myServerId.c_str());
-      msg.server_identifier = l;
-      msg.port = loc.myPort;
-      cerr << l << endl;
-      cerr << loc.myPort << endl;
-      int status = msg.sendMessage(sock);
+      // valid server found that will handle requests
+      if (loc.myPort != -1) {
+        struct CLIENT_BINDER_LOC_SUCCESS msg;
+        char *l = new char[STR_LEN];
+        strcpy(l, loc.myServerId.c_str());
+        msg.server_identifier = l;
+        msg.port = loc.myPort;
+        status = msg.sendMessage(sock);
+      } else {
+        // no server matching the function signature found
+        struct CLIENT_BINDER_LOC_FAILURE msg;
+        msg.reasonCode = NO_MATCHING_SIGNATURE;
+        status = msg.sendMessage(sock);
+      }
       break;
     }
   }

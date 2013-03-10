@@ -17,9 +17,17 @@ bool Proc::isSameSignature(string name, int* argTypes) {
   }
 
   for (int i = 0; i < len; i++) {
-    if (argTypes[i] != myArgTypes[i]) {
+    // check for same type
+    if (((argTypes[i] & (15 << 16)) >> 16) != ((myArgTypes[i] & (15 << 16)) >> 16)) {
       return false;
     }
+
+    /*
+    // check for scalar vs array
+    if (((argTypes[i] & ((1 << 16) - 1)) == 0) && ((myArgTypes[i] & ((1 << 16) -1)) != 0)) {
+      return false;
+    }
+    */
   }
   return true;
 }
@@ -68,7 +76,7 @@ void RpcDatabase::add(string server, int port, string functionName, int* argType
 
 ServerLocation RpcDatabase::getProcLocation(string& name, int* argTypes) {
   string str = "";
-  ServerLocation ret(str, 0);
+  ServerLocation ret(str, -1);
   bool found = false;
   int loc = -1;;
 
