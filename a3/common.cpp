@@ -224,7 +224,7 @@ CLIENT_BINDER_LOC_SUCCESS::readMessage(int sock) {
   try {
     // receive the server identifier
     ret->server_identifier = new char[STR_LEN];
-    status = recv(sock, ret->server_identifier, sizeof(ret->server_identifier), 0);
+    status = recv(sock, ret->server_identifier, STR_LEN, 0);
     checkStatus(status, RECEIVE_FAILURE, errorMsg);
 
     // receive the port

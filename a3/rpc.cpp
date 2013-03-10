@@ -153,7 +153,11 @@ int rpcCall(char* name, int* argTypes, void** args) {
     res_failure = CLIENT_BINDER_LOC_FAILURE::readMessage(my_binder_sock);
     return RETURN_FAILURE;
   } else if (msg_type == MSG_LOC_SUCCESS) {
+    cerr << "reading message" << endl;
     res_success = CLIENT_BINDER_LOC_SUCCESS::readMessage(my_binder_sock);
+    cerr << "read message" << endl;
+    cerr << res_success->server_identifier << endl;
+    cerr << res_success->port << endl;
     if (res_success == NULL) {
       return RETURN_FAILURE;
     }
@@ -169,6 +173,7 @@ int rpcCall(char* name, int* argTypes, void** args) {
   struct hostent *server;
   portno = res_success->port;
   server_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  cerr << "made it here" << endl;
   server = gethostbyname(res_success->server_identifier);
 
   bzero((char *) &binder_addr, sizeof(binder_addr));
@@ -177,6 +182,7 @@ int rpcCall(char* name, int* argTypes, void** args) {
         (char *)&binder_addr.sin_addr.s_addr,
         server->h_length);
   binder_addr.sin_port = htons(portno);
+
 
   connect(server_sock,(struct sockaddr *)&binder_addr, sizeof(binder_addr));
 
@@ -232,8 +238,8 @@ int rpcCacheCall(char* name, int* argTypes, void** args) {
 int rpcRegister(char* name, int* argTypes, skeleton f) {
   int len;
   int status;
-  cerr << name << ' ' << argTypes[0] << ' ' << argTypes[1] << ' ' << argTypes[2] << ' ' << argTypes[3] << endl;
-  cerr << argTypesLength(argTypes) << endl;
+  //cerr << name << ' ' << argTypes[0] << ' ' << argTypes[1] << ' ' << argTypes[2] << ' ' << argTypes[3] << endl;
+  //cerr << argTypesLength(argTypes) << endl;
 
   // make an entry in local database
   struct PROC_SKELETON procedure;

@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <vector>
 #include <string>
+#include "rpcDatabase.h"
 #include "binder.h"
 #include "common.h"
 
@@ -16,6 +17,11 @@ using namespace std;
 
 Binder::Binder() {
   shutdown = false;
+  rpcDatabase = new RpcDatabase();
+}
+
+Binder::~Binder() {
+  delete rpcDatabase;
 }
 
 void Binder::start() {
@@ -132,6 +138,7 @@ void Binder::process_connection(int sock) {
   // receive the buffer length
   int msg_type = 0;
   status = recv(sock, &msg_type, sizeof msg_type, 0);
+  cerr << "msg type: " << msg_type << endl;
   if (status < 0) {
     cerr << "ERROR: receive failed" << endl;
     return;
@@ -157,12 +164,31 @@ void Binder::process_connection(int sock) {
       struct SERVER_BINDER_REGISTER* res = SERVER_BINDER_REGISTER::readMessage(sock);
       cerr << res->server_identifier << ' ' << res->port << endl;
       cerr << res->name << ' ' << res->argTypes[0] << ' ' << res->argTypes[1] << ' ' << res->argTypes[2] << ' ' << res->argTypes[3] << endl;
+      rpcDatabase->add(res->server_identifier, res->port, res->name, res->argTypes);
       break;
     }
     case MSG_LOC_REQUEST: {
       struct CLIENT_BINDER_LOC_REQUEST* res = CLIENT_BINDER_LOC_REQUEST::readMessage(sock);
       cerr << res->name << endl;
       cerr << res->argTypes[0] << " " << res->argTypes[1] << " " << res->argTypes[2] << endl;
+      string serverName = res->name;
+      ServerLocation loc = rpcDatabase->getProcLocation(serverName, res->argTypes);
+      cerr << loc.myServerId << endl;
+      cerr << loc.myPort << endl;
+
+      // send the server location to the client
+      struct CLIENT_BINDER_LOC_SUCCESS msg;
+      // TODO FIX THIS SHIT
+      //char *p = const_cast<char *>(loc.myServerId.c_str());
+      //msg.server_identifier = p;
+      //char[] blah = {'l','i','n','u','x','0','3','2','.','s','t','u','d','e','n','t','.','c','s','\0'};
+      char *blah = "linux032.student.cs";
+      char* l = new char[STR_LEN];
+      strcpy(l, loc.myServerId.c_str());
+      msg.server_identifier = l;
+      msg.port = loc.myPort;
+      int status = msg.sendMessage(sock);
+
       break;
     }
   }
