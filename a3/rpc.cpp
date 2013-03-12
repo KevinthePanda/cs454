@@ -393,6 +393,12 @@ int rpcExecute() {
                       if (res->argTypes[i] != proc.argTypes[i]) {
                         match = false;
                       }
+
+                      // check for scalar vs array
+                      if ((((res->argTypes[i] & ((1 << 16) - 1)) == 0) && ((proc.argTypes[i] & ((1 << 16) - 1)) != 0))
+                          || (((res->argTypes[i] & ((1 << 16) - 1)) != 0) && ((proc.argTypes[i] & ((1 << 16) - 1)) == 0))) {
+                        match = false;
+                      }
                     }
 
                     if (match) {

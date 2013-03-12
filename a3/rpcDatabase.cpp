@@ -22,12 +22,11 @@ bool Proc::isSameSignature(string name, int* argTypes) {
       return false;
     }
 
-    /*
     // check for scalar vs array
-    if (((argTypes[i] & ((1 << 16) - 1)) == 0) && ((myArgTypes[i] & ((1 << 16) -1)) != 0)) {
+    if ((((argTypes[i] & ((1 << 16) - 1)) == 0) && ((myArgTypes[i] & ((1 << 16) - 1)) != 0))
+        || (((argTypes[i] & ((1 << 16) - 1)) != 0) && ((myArgTypes[i] & ((1 << 16) - 1)) == 0))) {
       return false;
     }
-    */
   }
   return true;
 }
