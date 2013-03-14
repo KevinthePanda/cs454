@@ -51,6 +51,21 @@ ServerProcList::ServerProcList(string& serverId, int port)
   :myLocation(serverId, port) {}
 
 void ServerProcList::add(string& name, int* argTypes) {
+  int loc = -1;;
+
+  // search for match
+  for (unsigned int i = 0; i < myProcs.size(); i++) {
+    if (myProcs[i].isSameSignature(name, argTypes)) {
+      loc = i;
+      break;
+    }
+  }
+
+  // delete the match
+  if (loc > 0) {
+    myProcs.erase(myProcs.begin() + loc);
+  }
+
   Proc proc(name, argTypes);
   myProcs.push_back(proc);
 }
@@ -64,11 +79,12 @@ int RpcDatabase::add(string server, int port, string functionName, int* argTypes
     if (myServers[i].myLocation.isMatchingLocation(server, port)) {
       for (unsigned int j = 0; j < myServers[i].myProcs.size(); j++) {
         if (myServers[i].myProcs[j].isSameSignature(functionName, argTypes)) {
-          return -1;
+          myServers[i].add(functionName, argTypes);
+          return SIGNATURE_ALREADY_EXISTS;
         }
       }
       myServers[i].add(functionName, argTypes);
-      return 0;
+      return REGISTER_SUCCESS;
     }
   }
 
@@ -76,7 +92,7 @@ int RpcDatabase::add(string server, int port, string functionName, int* argTypes
   ServerProcList procList(server, port);
   procList.add(functionName, argTypes);
   myServers.push_back(procList);
-  return 0;
+  return REGISTER_SUCCESS;
 }
 
 ServerLocation RpcDatabase::getProcLocation(string& name, int* argTypes) {

@@ -4,3 +4,4 @@
 . error handling
 . memory handling and freeing
 . more error codes - MAYBE DONE
+. warning code for registering something that exists already

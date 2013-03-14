@@ -12,6 +12,7 @@
 
 // warnings
 #define RETURN_WARNING 1
+#define SIGNATURE_ALREADY_EXISTS 2
 
 // errors
 #define RETURN_FAILURE -1
@@ -21,7 +22,6 @@
 #define FUNCTION_FAILURE -5
 #define NO_SERVER_FAILURE -6
 #define NO_MATCHING_SIGNATURE -7
-#define SIGNATURE_ALREADY_EXISTS -8
 
 // Message Types
 #define MSG_REGISTER 0
