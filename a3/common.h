@@ -62,11 +62,6 @@ struct PROC_LOCATION {
 }; // Used on binder
 
 // Message Structs
-
-// TODO maybe need destructors for messages
-// NOTE some messages don't own their pointers, so might be better to
-// deallocate manually
-
 // used with REGISTER
 struct SERVER_BINDER_REGISTER {
   char* server_identifier;

@@ -39,15 +39,9 @@ struct thread_data {
 };
 
 void *ServerExecute(void *threadarg) {
-  cerr << "before call" << endl;
   struct thread_data *data;
   data = (struct thread_data *) threadarg;
 
-  cerr << data->name << " " << data->f << endl;
-  for (int i = 0; i < 11; i++) {
-    cerr << " " << *(((long *)(data->args)[0]) + i);
-  }
-  cerr << endl;
   int function_res = data->f(data->argTypes, data->args);
   if (function_res == 0) {
     // send the server location to the client
@@ -56,7 +50,6 @@ void *ServerExecute(void *threadarg) {
     msg.argTypes = data->argTypes;
     msg.args = data->args;
     msg.sendMessage(data->sock);
-    cerr << "after call" << endl;
   } else {
     struct CLIENT_SERVER_EXECUTE_FAILURE msg;
     msg.reasonCode = FUNCTION_FAILURE;
@@ -106,12 +99,6 @@ int rpcInit() {
   hints.ai_flags = AI_PASSIVE;
 
   status = getaddrinfo(NULL, "0", &hints, &servinfo);
-  /*
-  if (status != 0) {
-    fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
-    return;
-  }
-  */
 
   p = servinfo;
   my_server_sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
@@ -120,6 +107,7 @@ int rpcInit() {
 
   status = listen(my_server_sock, 5);
 
+  /*
   // get server identifier
   my_server_identifier = new char[STR_LEN];
   gethostname(my_server_identifier, STR_LEN);
@@ -131,9 +119,7 @@ int rpcInit() {
   getsockname(my_server_sock, (struct sockaddr *)&sin, &len);
   my_server_port = ntohs(sin.sin_port);
   cout << "port " << my_server_port << endl;
-
-  //status = listen(my_server_sock, 5);
-
+  */
 
   return RETURN_SUCCESS;
 }
@@ -200,7 +186,6 @@ int rpcCall(char* name, int* argTypes, void** args) {
   }
 
   // make connection to server
-  // TODO refactor this block?
   int server_sock;
   struct hostent *server;
   portno = res_success->port;
@@ -359,21 +344,19 @@ int rpcExecute() {
         my_server_connections.push_back(new_sock);
 
       } else if (FD_ISSET(my_binder_sock, &readfds)) {
-        cerr << "read from binder sock" << endl;
         // receive the message type
         int status;
         int msg_type;
         status = recv(my_binder_sock, &msg_type, sizeof msg_type, 0);
-        cerr << "msg_type: " << msg_type << endl;
-        if (status == 0 || msg_type == MSG_TERMINATE)
-          return 0;
+        if (status == 0 || msg_type == MSG_TERMINATE) {
+          return RETURN_SUCCESS;
+        }
       } else {
         // a connection is ready to send us stuff
         for (vector<int>::iterator it = my_server_connections.begin();
             it != my_server_connections.end(); ++it) {
           int connection = *it;
           if (FD_ISSET(connection, &readfds)) {
-            //process_server_message(connection);
 
             int status;
 
@@ -383,19 +366,13 @@ int rpcExecute() {
 
             if (status < 0) {
               cerr << "ERROR: receive failed" << endl;
-              //return -1;
             }
             if (status == 0) {
               // client has closed the connection
               my_server_to_remove.push_back(connection);
-              //return -1;
             }
 
             switch (msg_type) {
-              case MSG_TERMINATE:
-                cerr << "server received terminate" << endl;
-                return 0;
-                break;
               case MSG_EXECUTE:
                 struct CLIENT_SERVER_EXECUTE* res = CLIENT_SERVER_EXECUTE::readMessage(connection);
 
@@ -448,16 +425,11 @@ int rpcExecute() {
     }
 
   }
-  return 0;
+  return RETURN_SUCCESS;
 }
 
 // Client calls this
 int rpcTerminate() {
-  // verify that the request comes from the same ip address/hostname
-  // Inform all of the servers
-  // Wait for servers to terminate
-  // Terminate binder
-
   // Get the host name
   char hostname[256];
   gethostname(hostname, 256);
@@ -465,5 +437,5 @@ int rpcTerminate() {
   struct CLIENT_BINDER_TERMINATE msg;
   msg.hostname = hostname;
   msg.sendMessage(my_binder_sock);
-  return 0;
+  return RETURN_SUCCESS;
 }

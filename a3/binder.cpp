@@ -150,29 +150,22 @@ void Binder::process_connection(int sock) {
 
   switch (msg_type) {
     case MSG_TERMINATE: {
-      cerr << "received terminate" << endl;
       // check that the sender has the right address
       struct CLIENT_BINDER_TERMINATE* res = CLIENT_BINDER_TERMINATE::readMessage(sock);
-      cerr << "client hostname: " << res->hostname << endl;
       char binderHostname[256];
       gethostname(binderHostname, 256);
-      cerr << "binder hostname: " << binderHostname << endl;
       if (strcmp(res->hostname, binderHostname) != 0)
         return;
 
       for (vector<int>::iterator it = myConnections.begin(); it != myConnections.end(); ++it) {
         int connection = *it;
-        cerr << "connection: " << connection << endl;
         msg_type = MSG_TERMINATE;
         send(connection, &msg_type, sizeof(msg_type), 0);
-        //myToRemove.push_back(connection);
       }
-      //close_connections();
       shutdown = true;
       break;
     }
     case MSG_REGISTER: {
-      cerr << "register from connection: " << sock << endl;
       struct SERVER_BINDER_REGISTER* res = SERVER_BINDER_REGISTER::readMessage(sock);
       int reg = rpcDatabase->add(res->server_identifier, res->port, res->name, res->argTypes);
       // successful registration
