@@ -1,5 +1,9 @@
+#include <iostream>
+
 #include "rpcDatabase.h"
 #include "common.h"
+
+using namespace std;
 
 //------------------------------------------------------
 // Proc
@@ -114,11 +118,14 @@ ServerLocation RpcDatabase::getProcLocation(string& name, int* argTypes) {
   }
 
   // rearrange the list
-  //if (loc > 0) {
-    //ServerProcList procList = myServers[loc];
-    //myServers.erase(myServers.begin() + loc);
-    //myServers.push_back(procList);
-  //}
+  if (loc >= 0) {
+    ServerProcList procList = myServers[loc];
+    myServers.erase(myServers.begin() + loc);
+    myServers.push_back(procList);
+  }
+
+  cerr << ret.myServerId << endl;
+  cerr << ret.myPort << endl;
 
   return ret;
 }
