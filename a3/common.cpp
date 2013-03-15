@@ -643,3 +643,46 @@ int CLIENT_SERVER_EXECUTE_FAILURE::sendMessage(int sock) {
 
   return SEND_SUCCESS;
 }
+
+//===================================================
+// CLIENT_SERVER_TERMINATE Member Functions
+//===================================================
+struct CLIENT_BINDER_TERMINATE*
+CLIENT_BINDER_TERMINATE::readMessage(int sock) {
+  int status;
+  struct CLIENT_BINDER_TERMINATE* ret = new struct CLIENT_BINDER_TERMINATE();
+  string errorMsg = "reading CLIENT_BINDER_TERMINATE message";
+
+  try {
+    ret->hostname = new char[STR_LEN];
+    status = recv(sock, ret->hostname, STR_LEN, 0);
+    checkStatus(status, RECEIVE_FAILURE, errorMsg);
+  } catch (RPCError& e) {
+    delete ret;
+    ret = NULL;
+  }
+
+  return ret;
+}
+
+int CLIENT_BINDER_TERMINATE::sendMessage(int sock) {
+  int status;
+  int msg_type = MSG_TERMINATE;
+  string errorMsg = "sending CLIENT_BINDER_TERMINATE message";
+
+  //cerr << "terminate send" << endl;
+
+  try {
+    // send the msg type
+    status = send(sock, &msg_type, sizeof(msg_type), 0);
+    checkStatus(status, SEND_FAILURE, errorMsg);
+
+    // send the host name
+    status = send(sock, hostname, STR_LEN, 0);
+    checkStatus(status, SEND_FAILURE, errorMsg);
+  } catch (RPCError& e) {
+    return SEND_FAILURE;
+  }
+
+  return SEND_SUCCESS;
+}

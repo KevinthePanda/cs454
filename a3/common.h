@@ -9,10 +9,10 @@
 #define RETURN_SUCCESS 0
 #define REGISTER_SUCCESS 0
 #define SEND_SUCCESS 0
+#define RECEIVE_SUCCESS 0
 
 // warnings
-#define RETURN_WARNING 1
-#define SIGNATURE_ALREADY_EXISTS 2
+#define SIGNATURE_ALREADY_EXISTS 1
 
 // errors
 #define RETURN_FAILURE -1
@@ -20,8 +20,7 @@
 #define SEND_FAILURE -3
 #define RECEIVE_FAILURE -4
 #define FUNCTION_FAILURE -5
-#define NO_SERVER_FAILURE -6
-#define NO_MATCHING_SIGNATURE -7
+#define NO_MATCHING_SIGNATURE -6
 
 // Message Types
 #define MSG_REGISTER 0
@@ -148,6 +147,13 @@ struct CLIENT_SERVER_EXECUTE_FAILURE {
   int reasonCode;
 
   static struct CLIENT_SERVER_EXECUTE_FAILURE* readMessage(int sock);
+  int sendMessage(int sock);
+};
+
+struct CLIENT_BINDER_TERMINATE {
+  char* hostname;
+
+  static struct CLIENT_BINDER_TERMINATE* readMessage(int sock);
   int sendMessage(int sock);
 };
 

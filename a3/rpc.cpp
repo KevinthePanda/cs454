@@ -39,9 +39,15 @@ struct thread_data {
 };
 
 void *ServerExecute(void *threadarg) {
+  cerr << "before call" << endl;
   struct thread_data *data;
   data = (struct thread_data *) threadarg;
 
+  cerr << data->name << " " << data->f << endl;
+  for (int i = 0; i < 11; i++) {
+    cerr << " " << *(((long *)(data->args)[0]) + i);
+  }
+  cerr << endl;
   int function_res = data->f(data->argTypes, data->args);
   if (function_res == 0) {
     // send the server location to the client
@@ -50,6 +56,7 @@ void *ServerExecute(void *threadarg) {
     msg.argTypes = data->argTypes;
     msg.args = data->args;
     msg.sendMessage(data->sock);
+    cerr << "after call" << endl;
   } else {
     struct CLIENT_SERVER_EXECUTE_FAILURE msg;
     msg.reasonCode = FUNCTION_FAILURE;
@@ -231,7 +238,7 @@ int rpcCall(char* name, int* argTypes, void** args) {
   struct CLIENT_SERVER_EXECUTE_SUCCESS* exec_success;
   struct CLIENT_SERVER_EXECUTE_FAILURE* exec_failure;
 
-  // handle location request response message
+  // handle execute request response message
   if (msg_type == MSG_EXECUTE_FAILURE) {
     exec_failure = CLIENT_SERVER_EXECUTE_FAILURE::readMessage(server_sock);
     return exec_failure->reasonCode;
@@ -318,7 +325,10 @@ int rpcExecute() {
     // build the connection list
     FD_ZERO(&readfds);
     FD_SET(my_server_sock, &readfds);
+    FD_SET(my_binder_sock, &readfds);
     n = my_server_sock;
+    if (my_binder_sock > my_server_sock)
+      n = my_binder_sock;
     for (vector<int>::iterator it = my_server_connections.begin();
         it != my_server_connections.end(); ++it) {
       int connection = *it;
@@ -348,6 +358,15 @@ int rpcExecute() {
         // add new connection
         my_server_connections.push_back(new_sock);
 
+      } else if (FD_ISSET(my_binder_sock, &readfds)) {
+        cerr << "read from binder sock" << endl;
+        // receive the message type
+        int status;
+        int msg_type;
+        status = recv(my_binder_sock, &msg_type, sizeof msg_type, 0);
+        cerr << "msg_type: " << msg_type << endl;
+        if (status == 0 || msg_type == MSG_TERMINATE)
+          return 0;
       } else {
         // a connection is ready to send us stuff
         for (vector<int>::iterator it = my_server_connections.begin();
@@ -438,7 +457,13 @@ int rpcTerminate() {
   // Inform all of the servers
   // Wait for servers to terminate
   // Terminate binder
-  int msg_type = MSG_TERMINATE;
-  send(my_binder_sock, &msg_type, sizeof(msg_type), 0);
+
+  // Get the host name
+  char hostname[256];
+  gethostname(hostname, 256);
+
+  struct CLIENT_BINDER_TERMINATE msg;
+  msg.hostname = hostname;
+  msg.sendMessage(my_binder_sock);
   return 0;
 }

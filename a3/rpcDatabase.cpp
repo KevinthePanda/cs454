@@ -114,11 +114,11 @@ ServerLocation RpcDatabase::getProcLocation(string& name, int* argTypes) {
   }
 
   // rearrange the list
-  if (loc > 0) {
-    ServerProcList procList = myServers[loc];
-    myServers.erase(myServers.begin() + loc);
-    myServers.push_back(procList);
-  }
+  //if (loc > 0) {
+    //ServerProcList procList = myServers[loc];
+    //myServers.erase(myServers.begin() + loc);
+    //myServers.push_back(procList);
+  //}
 
   return ret;
 }

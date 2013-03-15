@@ -1,6 +1,6 @@
 Maverick Lee - ms3lee
 Jack Huang - jx3huang
 
-to compile both type
+To compile everything type:
 
-make all
+make clean all
