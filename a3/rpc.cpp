@@ -107,19 +107,17 @@ int rpcInit() {
 
   status = listen(my_server_sock, 5);
 
-  /*
+  
   // get server identifier
   my_server_identifier = new char[STR_LEN];
   gethostname(my_server_identifier, STR_LEN);
-  cout << "server " << my_server_identifier << endl;
 
   // get port number
   struct sockaddr_in sin;
   socklen_t len = sizeof(sin);
   getsockname(my_server_sock, (struct sockaddr *)&sin, &len);
   my_server_port = ntohs(sin.sin_port);
-  cout << "port " << my_server_port << endl;
-  */
+  
 
   return RETURN_SUCCESS;
 }
