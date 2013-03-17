@@ -112,6 +112,7 @@ void Binder::start() {
         }
       }
     }
+    close_connections();
   }
 
   // free the linked list
@@ -143,7 +144,9 @@ void Binder::process_connection(int sock) {
   }
 
   if (status == 0) {
-    // client has closed the connection
+    //remote end has closed the connection
+    //deregister the server if the connection was a server
+    rpcDatabase->remove(sock);
     myToRemove.push_back(sock);
     return;
   }
@@ -167,7 +170,7 @@ void Binder::process_connection(int sock) {
     }
     case MSG_REGISTER: {
       struct SERVER_BINDER_REGISTER* res = SERVER_BINDER_REGISTER::readMessage(sock);
-      int reg = rpcDatabase->add(res->server_identifier, res->port, res->name, res->argTypes);
+      int reg = rpcDatabase->add(res->server_identifier, res->port, sock, res->name, res->argTypes);
       // successful registration
       if (reg >= 0) {
         struct SERVER_BINDER_REGISTER_SUCCESS msg;

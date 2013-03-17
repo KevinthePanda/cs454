@@ -1,6 +1,10 @@
 #include "rpcDatabase.h"
 #include "common.h"
 
+#include <iostream>
+
+using namespace std;
+
 //------------------------------------------------------
 // Proc
 //------------------------------------------------------
@@ -47,8 +51,8 @@ bool ServerLocation::isMatchingLocation(string server, int port) {
 //------------------------------------------------------
 // ServerProcList
 //------------------------------------------------------
-ServerProcList::ServerProcList(string& serverId, int port)
-  :myLocation(serverId, port) {}
+ServerProcList::ServerProcList(string& serverId, int port, int socketFd)
+  :mySocketFd(socketFd), myLocation(serverId, port) {}
 
 void ServerProcList::add(string& name, int* argTypes) {
   int loc = -1;;
@@ -62,7 +66,7 @@ void ServerProcList::add(string& name, int* argTypes) {
   }
 
   // delete the match
-  if (loc > 0) {
+  if (loc >= 0) {
     myProcs.erase(myProcs.begin() + loc);
   }
 
@@ -73,7 +77,7 @@ void ServerProcList::add(string& name, int* argTypes) {
 //------------------------------------------------------
 // RpcDatabase
 //------------------------------------------------------
-int RpcDatabase::add(string server, int port, string functionName, int* argTypes) {
+int RpcDatabase::add(string server, int port, int socketFd, string functionName, int* argTypes) {
   // search for a server
   for (unsigned int i = 0; i < myServers.size(); i++) {
     if (myServers[i].myLocation.isMatchingLocation(server, port)) {
@@ -89,11 +93,32 @@ int RpcDatabase::add(string server, int port, string functionName, int* argTypes
   }
 
   // not found, add the server to the list
-  ServerProcList procList(server, port);
+  ServerProcList procList(server, port, socketFd);
   procList.add(functionName, argTypes);
   myServers.push_back(procList);
   return REGISTER_SUCCESS;
 }
+
+void RpcDatabase::remove(int socketFd) {
+  int loc = -1;
+  for (unsigned int i = 0; i < myServers.size(); i++) {
+    struct ServerProcList server = myServers[i];
+    cerr << "item: " << server.myLocation.myServerId << " " << server.myLocation.myPort << endl;
+    if (server.mySocketFd == socketFd) {
+      loc = i;
+      break;
+    }
+  }
+
+  cerr << "loc: " << loc << endl;
+  // delete the match
+  if (loc >= 0) {
+    myServers.erase(myServers.begin() + loc);
+    cerr << "remove server" << endl;
+  }
+}
+
+
 
 ServerLocation RpcDatabase::getProcLocation(string& name, int* argTypes) {
   string str = "";

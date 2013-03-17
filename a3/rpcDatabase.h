@@ -29,17 +29,19 @@ class ServerLocation {
 
 class ServerProcList {
   public:
-    ServerProcList(string& serverId, int port);
+    ServerProcList(string& serverId, int port, int socketFd);
     void add(string& name, int* argTypes);
 
   //private:
+    int mySocketFd;
     ServerLocation myLocation;
     vector<Proc> myProcs;
 };
 
 class RpcDatabase {
   public:
-    int add(string server, int port, string functionName, int* argTypes);
+    int add(string server, int port, int socketFd, string functionName, int* argTypes);
+    void remove(int socketFd);
     ServerLocation getProcLocation(string& name, int* argTypes);
 
   private:

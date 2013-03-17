@@ -108,15 +108,22 @@ int rpcInit() {
   status = listen(my_server_sock, 5);
 
   
-  // get server identifier
-  my_server_identifier = new char[STR_LEN];
-  gethostname(my_server_identifier, STR_LEN);
 
   // get port number
   struct sockaddr_in sin;
   socklen_t len = sizeof(sin);
   getsockname(my_server_sock, (struct sockaddr *)&sin, &len);
   my_server_port = ntohs(sin.sin_port);
+
+  // get server identifier
+  my_server_identifier = new char[STR_LEN];
+  getsockname(my_binder_sock, (struct sockaddr *)&sin, &len);
+  //gethostname(my_server_identifier, STR_LEN);
+  getnameinfo((struct sockaddr*)&sin, len,
+      my_server_identifier, STR_LEN, NULL, 0, 0);
+  cerr << my_server_identifier << endl;
+  cerr << my_server_port << endl;
+
   
 
   return RETURN_SUCCESS;
@@ -183,6 +190,9 @@ int rpcCall(char* name, int* argTypes, void** args) {
     return RETURN_FAILURE;
   }
 
+  // close connection
+  close(my_binder_sock);
+
   // make connection to server
   int server_sock;
   struct hostent *server;
@@ -242,7 +252,8 @@ int rpcCall(char* name, int* argTypes, void** args) {
   }
 
   // close connection
-  close(my_binder_sock);
+  close(server_sock);
+
 
   return RETURN_SUCCESS;
 }
@@ -368,10 +379,12 @@ int rpcExecute() {
             if (status == 0) {
               // client has closed the connection
               my_server_to_remove.push_back(connection);
+              continue;
             }
 
             switch (msg_type) {
               case MSG_EXECUTE:
+                cerr << "execute" << endl;
                 struct CLIENT_SERVER_EXECUTE* res = CLIENT_SERVER_EXECUTE::readMessage(connection);
 
                 for (vector<struct PROC_SKELETON>::iterator p = my_server_procedures.begin(); p != my_server_procedures.end(); ++p) {
@@ -414,13 +427,14 @@ int rpcExecute() {
           }
         }
       }
-      // close connections
-      for (vector<int>::iterator it = my_server_to_remove.begin(); it != my_server_to_remove.end(); ++it) {
-        my_server_connections.erase(remove(my_server_connections.begin(), my_server_connections.end(), *it), my_server_connections.end());
-        close(*it);
-      }
-      my_server_to_remove.clear();
     }
+
+    // close connections
+    for (vector<int>::iterator it = my_server_to_remove.begin(); it != my_server_to_remove.end(); ++it) {
+      my_server_connections.erase(remove(my_server_connections.begin(), my_server_connections.end(), *it), my_server_connections.end());
+      close(*it);
+    }
+    my_server_to_remove.clear();
 
   }
   return RETURN_SUCCESS;
@@ -428,12 +442,38 @@ int rpcExecute() {
 
 // Client calls this
 int rpcTerminate() {
+  // create a socket to do calls to the binder
+  char *binderAddress = getenv("BINDER_ADDRESS");
+  char *binderPort = getenv("BINDER_PORT");
+
+  // open connection to binder
+  int sockfd, portno;
+  struct sockaddr_in binder_addr;
+  struct hostent *binder;
+  portno = atoi(binderPort);
+  sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  binder = gethostbyname(binderAddress);
+
+  bzero((char *) &binder_addr, sizeof(binder_addr));
+  binder_addr.sin_family = AF_INET;
+  bcopy((char *)binder->h_addr,
+        (char *)&binder_addr.sin_addr.s_addr,
+        binder->h_length);
+  binder_addr.sin_port = htons(portno);
+
+  connect(sockfd,(struct sockaddr *)&binder_addr, sizeof(binder_addr));
+  my_binder_sock = sockfd;
+
   // Get the host name
   char hostname[256];
   gethostname(hostname, 256);
 
+  // send terminate message
   struct CLIENT_BINDER_TERMINATE msg;
   msg.hostname = hostname;
   msg.sendMessage(my_binder_sock);
   return RETURN_SUCCESS;
+
+  // close connection
+  close(my_binder_sock);
 }

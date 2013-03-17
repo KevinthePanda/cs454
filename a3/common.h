@@ -21,6 +21,8 @@
 #define RECEIVE_FAILURE -4
 #define FUNCTION_FAILURE -5
 #define NO_MATCHING_SIGNATURE -6
+#define INVALID_BINDER_ADDRESS -7
+#define INVALID_BINDER_PORT -8
 
 // Message Types
 #define MSG_REGISTER 0
