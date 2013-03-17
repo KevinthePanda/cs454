@@ -4,3 +4,15 @@ Jack Huang - jx3huang
 To compile everything type:
 
 make clean all
+
+This compiles librpc.a, the binder, and the sample server/client.
+
+
+Additional libraries used:
+
+- pthread
+
+So to compile server/client individually, type:
+
+g++ -L. client.o -lrpc -lpthread -o client
+g++ -L. server.o server_functions.o server_function_skels.o -lrpc -lpthread -o client
