@@ -64,9 +64,9 @@ void Binder::start() {
 
   while (true) {
     // shutdown condition is met
-    if (shutdown) {
-      break;
-    }
+    //if (shutdown) {
+      //break;
+    //}
 
     // build the connection list
     FD_ZERO(&readfds);
@@ -113,6 +113,9 @@ void Binder::start() {
       }
     }
     close_connections();
+    if (shutdown && rpcDatabase->isEmpty()) {
+      break;
+    }
   }
 
   // free the linked list
@@ -151,6 +154,11 @@ void Binder::process_connection(int sock) {
     return;
   }
 
+  // if in shutdown phase, don't handle any messages except server shutdown
+  if (shutdown) {
+    return;
+  }
+
   switch (msg_type) {
     case MSG_TERMINATE: {
       // check that the sender has the right address
@@ -160,11 +168,13 @@ void Binder::process_connection(int sock) {
       if (strcmp(res->hostname, binderHostname) != 0)
         return;
 
-      for (vector<int>::iterator it = myConnections.begin(); it != myConnections.end(); ++it) {
-        int connection = *it;
-        msg_type = MSG_TERMINATE;
-        send(connection, &msg_type, sizeof(msg_type), 0);
-      }
+      // tell servers to shutdown
+      terminateServers();
+      //for (vector<int>::iterator it = myConnections.begin(); it != myConnections.end(); ++it) {
+        //int connection = *it;
+        //msg_type = MSG_TERMINATE;
+        //send(connection, &msg_type, sizeof(msg_type), 0);
+      //}
       shutdown = true;
       break;
     }
@@ -207,6 +217,17 @@ void Binder::process_connection(int sock) {
     }
   }
 }
+
+void Binder::terminateServers() {
+  vector<ServerProcList> servers = rpcDatabase->getServers();
+  for (vector<ServerProcList>::iterator it = servers.begin(); it != servers.end(); ++it) {
+    int status;
+    ServerProcList server = *it;
+    int msg_type = MSG_TERMINATE;
+    status = send(server.mySocketFd, &msg_type, sizeof(msg_type), 0);
+  }
+}
+
 
 int main() {
   Binder binder;

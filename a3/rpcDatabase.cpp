@@ -147,3 +147,12 @@ ServerLocation RpcDatabase::getProcLocation(string& name, int* argTypes) {
 
   return ret;
 }
+
+
+vector<ServerProcList> RpcDatabase::getServers() {
+  return myServers;
+}
+
+bool RpcDatabase::isEmpty() {
+  return myServers.empty();
+}

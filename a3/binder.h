@@ -22,6 +22,7 @@ class Binder {
     void close_connections();
     void process_connection(int sock);
     void add_connection(int sock);
+    void terminateServers();
 };
 
 #endif

@@ -358,6 +358,8 @@ int rpcExecute() {
         int msg_type;
         status = recv(my_binder_sock, &msg_type, sizeof msg_type, 0);
         if (status == 0 || msg_type == MSG_TERMINATE) {
+          cerr << "terminating server" << endl;
+          close(my_binder_sock);
           return RETURN_SUCCESS;
         }
       } else {

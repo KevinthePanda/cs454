@@ -43,6 +43,8 @@ class RpcDatabase {
     int add(string server, int port, int socketFd, string functionName, int* argTypes);
     void remove(int socketFd);
     ServerLocation getProcLocation(string& name, int* argTypes);
+    vector<ServerProcList> getServers();
+    bool isEmpty();
 
   private:
     vector<ServerProcList> myServers;
