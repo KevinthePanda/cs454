@@ -1,10 +1,6 @@
 #include "rpcDatabase.h"
 #include "common.h"
 
-#include <iostream>
-
-using namespace std;
-
 //------------------------------------------------------
 // Proc
 //------------------------------------------------------
@@ -103,18 +99,15 @@ void RpcDatabase::remove(int socketFd) {
   int loc = -1;
   for (unsigned int i = 0; i < myServers.size(); i++) {
     struct ServerProcList server = myServers[i];
-    cerr << "item: " << server.myLocation.myServerId << " " << server.myLocation.myPort << endl;
     if (server.mySocketFd == socketFd) {
       loc = i;
       break;
     }
   }
 
-  cerr << "loc: " << loc << endl;
   // delete the match
   if (loc >= 0) {
     myServers.erase(myServers.begin() + loc);
-    cerr << "remove server" << endl;
   }
 }
 

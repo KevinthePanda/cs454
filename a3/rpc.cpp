@@ -67,7 +67,11 @@ int my_client_sock;
 // server calls this
 int rpcInit() {
   char *binderAddress = getenv("BINDER_ADDRESS");
+  if (binderAddress == NULL)
+    return INVALID_BINDER_ADDRESS;
   char *binderPort = getenv("BINDER_PORT");
+  if (binderPort == NULL)
+    return INVALID_BINDER_PORT;
 
   // open connection to binder
   int sockfd, portno;
@@ -121,8 +125,6 @@ int rpcInit() {
   //gethostname(my_server_identifier, STR_LEN);
   getnameinfo((struct sockaddr*)&sin, len,
       my_server_identifier, STR_LEN, NULL, 0, 0);
-  cerr << my_server_identifier << endl;
-  cerr << my_server_port << endl;
 
   
 
@@ -179,7 +181,7 @@ int rpcCall(char* name, int* argTypes, void** args) {
   // handle location request response message
   if (msg_type == MSG_LOC_FAILURE) {
     res_failure = CLIENT_BINDER_LOC_FAILURE::readMessage(my_binder_sock);
-    return RETURN_FAILURE;
+    return NO_MATCHING_SIGNATURE;
   } else if (msg_type == MSG_LOC_SUCCESS) {
     res_success = CLIENT_BINDER_LOC_SUCCESS::readMessage(my_binder_sock);
     if (res_success == NULL) {
@@ -358,7 +360,6 @@ int rpcExecute() {
         int msg_type;
         status = recv(my_binder_sock, &msg_type, sizeof msg_type, 0);
         if (status == 0 || msg_type == MSG_TERMINATE) {
-          cerr << "terminating server" << endl;
           close(my_binder_sock);
           return RETURN_SUCCESS;
         }
@@ -386,7 +387,6 @@ int rpcExecute() {
 
             switch (msg_type) {
               case MSG_EXECUTE:
-                cerr << "execute" << endl;
                 struct CLIENT_SERVER_EXECUTE* res = CLIENT_SERVER_EXECUTE::readMessage(connection);
 
                 for (vector<struct PROC_SKELETON>::iterator p = my_server_procedures.begin(); p != my_server_procedures.end(); ++p) {

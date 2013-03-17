@@ -670,7 +670,6 @@ int CLIENT_BINDER_TERMINATE::sendMessage(int sock) {
   int msg_type = MSG_TERMINATE;
   string errorMsg = "sending CLIENT_BINDER_TERMINATE message";
 
-  //cerr << "terminate send" << endl;
 
   try {
     // send the msg type

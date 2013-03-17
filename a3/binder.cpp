@@ -63,10 +63,6 @@ void Binder::start() {
   struct sockaddr_storage their_addr;
 
   while (true) {
-    // shutdown condition is met
-    //if (shutdown) {
-      //break;
-    //}
 
     // build the connection list
     FD_ZERO(&readfds);
@@ -113,6 +109,7 @@ void Binder::start() {
       }
     }
     close_connections();
+    // shutdown the binder once all servers have disconnected
     if (shutdown && rpcDatabase->isEmpty()) {
       break;
     }
@@ -170,11 +167,6 @@ void Binder::process_connection(int sock) {
 
       // tell servers to shutdown
       terminateServers();
-      //for (vector<int>::iterator it = myConnections.begin(); it != myConnections.end(); ++it) {
-        //int connection = *it;
-        //msg_type = MSG_TERMINATE;
-        //send(connection, &msg_type, sizeof(msg_type), 0);
-      //}
       shutdown = true;
       break;
     }
@@ -189,7 +181,7 @@ void Binder::process_connection(int sock) {
       } else {
         // failed registration
         struct SERVER_BINDER_REGISTER_FAILURE msg;
-        msg.failureCode = reg;
+        msg.failureCode = REGISTER_FAILURE;
         status = msg.sendMessage(sock);
       }
       break;
